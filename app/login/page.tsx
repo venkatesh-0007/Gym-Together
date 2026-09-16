@@ -74,9 +74,24 @@ export default function LoginPage() {
 
         {/* Alerts */}
         {errorMsg && (
-          <div className="p-3.5 bg-rose-950/60 border border-rose-800/80 rounded-2xl text-xs text-rose-300 font-semibold flex items-center gap-2.5 animate-in fade-in">
-            <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
-            <span>{errorMsg}</span>
+          <div className="p-3.5 bg-rose-950/60 border border-rose-800/80 rounded-2xl text-xs text-rose-300 font-semibold flex flex-col gap-2.5 animate-in fade-in">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+            {errorMsg.toLowerCase().includes('no account found') && (
+              <div className="pt-2 border-t border-rose-900/40 flex flex-col gap-2">
+                <p className="text-[11px] text-rose-200/90 font-normal leading-relaxed">
+                  💡 <strong>First time on this device?</strong> Unless Firebase Cloud Sync is configured, accounts are saved locally on each browser.
+                </p>
+                <Link
+                  href={`/signup${email ? `?email=${encodeURIComponent(email)}` : ''}`}
+                  className="w-full py-2 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-bold rounded-xl text-center text-xs transition-all shadow-sm"
+                >
+                  Create Account on this Device
+                </Link>
+              </div>
+            )}
           </div>
         )}
 

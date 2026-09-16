@@ -276,7 +276,7 @@ class AuthService {
       return {
         success: false,
         errorCode: 'USER_NOT_FOUND',
-        errorMessage: 'No account found with this email. Please check your spelling or sign up.',
+        errorMessage: 'No account found with this email on this device. Please sign up below or check spelling.',
       };
     }
 
