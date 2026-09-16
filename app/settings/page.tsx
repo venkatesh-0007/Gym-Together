@@ -12,10 +12,24 @@ import {
   Clock,
   Scale,
   Target,
+  Palette,
+  Moon,
+  Sun,
+  Laptop,
 } from 'lucide-react';
 import { useWorkout } from '@/lib/context/WorkoutContext';
 import { storage } from '@/lib/storage';
 import { triggerHaptic } from '@/lib/utils/haptics';
+import { AccentColor } from '@/lib/types/workout';
+
+const ACCENT_PRESETS: { id: AccentColor; label: string; hex: string; isDefault?: boolean }[] = [
+  { id: 'red', label: 'Crimson Red', hex: '#ef4444', isDefault: true },
+  { id: 'emerald', label: 'Emerald Green', hex: '#10b981' },
+  { id: 'blue', label: 'Electric Blue', hex: '#3b82f6' },
+  { id: 'violet', label: 'Deep Violet', hex: '#8b5cf6' },
+  { id: 'amber', label: 'Amber Gold', hex: '#f59e0b' },
+  { id: 'rose', label: 'Vibrant Rose', hex: '#f43f5e' },
+];
 
 export default function SettingsPage() {
   const { settings, updateSettings, refreshWorkouts, refreshTemplates } = useWorkout();
@@ -37,7 +51,7 @@ export default function SettingsPage() {
       const a = document.createElement('a');
       a.href = url;
       const dateStr = new Date().toISOString().split('T')[0];
-      a.download = `irontrack-backup-${dateStr}.json`;
+      a.download = `satatam-backup-${dateStr}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -93,14 +107,17 @@ export default function SettingsPage() {
     setTimeout(() => setImportMessage(null), 4000);
   };
 
+  const activeTheme = settings.theme || 'dark';
+  const activeAccent = settings.accentColor || 'red';
+
   return (
     <div className="flex-1 flex flex-col px-4 sm:px-6 py-6 gap-6 max-w-5xl mx-auto w-full animate-page-enter">
       <div>
-        <h1 className="text-2xl font-black text-white tracking-tight">
+        <h1 className="text-2xl font-black text-[var(--foreground)] tracking-tight">
           Settings & Preferences
         </h1>
-        <p className="text-xs text-zinc-400 mt-0.5">
-          Customize workout parameters, metric units, and offline backup storage
+        <p className="text-xs text-[var(--muted)] mt-0.5">
+          Appearance, themes, workout parameters, metric units, and offline backup
         </p>
       </div>
 
@@ -111,6 +128,98 @@ export default function SettingsPage() {
         </div>
       )}
 
+      {/* APPEARANCE & THEME SECTION (Full Width) */}
+      <section className="gym-card p-6 shadow-sm flex flex-col gap-5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-accent-subtle border border-accent-subtle flex items-center justify-center text-accent">
+            <Palette className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-xs uppercase font-bold tracking-wider text-[var(--muted)]">
+              Appearance & Theme
+            </span>
+            <p className="text-sm font-extrabold text-[var(--foreground)]">Display & Accent Palette</p>
+          </div>
+        </div>
+
+        {/* Theme Mode Selector (Dark, Light, System) */}
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-bold text-[var(--foreground)]">Theme Mode</label>
+          <div className="grid grid-cols-3 gap-2.5">
+            {[
+              { id: 'dark' as const, label: 'Dark Mode', icon: Moon },
+              { id: 'light' as const, label: 'Light Mode', icon: Sun },
+              { id: 'system' as const, label: 'System', icon: Laptop },
+            ].map(({ id, label, icon: Icon }) => {
+              const isSelected = activeTheme === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    updateSettings({ ...settings, theme: id });
+                  }}
+                  className={`flex flex-col items-center justify-center gap-2 py-3 px-3 rounded-2xl border text-xs font-bold transition-all active:scale-95 ${
+                    isSelected
+                      ? 'bg-accent text-white border-accent shadow-md shadow-accent scale-[1.02]'
+                      : 'bg-[var(--card-subtle)] border-[var(--card-border)] text-[var(--muted)] hover:text-[var(--foreground)] hover:border-[var(--card-hover-border)]'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Accent Color Palette Selector */}
+        <div className="flex flex-col gap-2 pt-4 border-t border-[var(--card-border)]">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-[var(--foreground)]">Accent Color</label>
+            <span className="text-[11px] text-[var(--muted)]">Default is Crimson Red</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+            {ACCENT_PRESETS.map((preset) => {
+              const isSelected = activeAccent === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => {
+                    triggerHaptic('light');
+                    updateSettings({ ...settings, accentColor: preset.id });
+                  }}
+                  className={`flex flex-col items-center gap-2 p-3 rounded-2xl border text-center transition-all active:scale-95 ${
+                    isSelected
+                      ? 'border-accent bg-[var(--card-subtle)] ring-2 ring-accent/30 shadow-sm scale-105'
+                      : 'border-[var(--card-border)] bg-[var(--card-subtle)] hover:border-[var(--card-hover-border)] opacity-80 hover:opacity-100'
+                  }`}
+                >
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center shadow-sm relative transition-transform"
+                    style={{ backgroundColor: preset.hex }}
+                  >
+                    {isSelected && <Check className="w-4 h-4 text-white stroke-[3]" />}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[11px] font-bold text-[var(--foreground)] leading-tight">
+                      {preset.label.split(' ')[0]}
+                    </span>
+                    {preset.isDefault && (
+                      <span className="text-[9px] font-semibold text-accent uppercase tracking-wider">
+                        Default
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       {/* Desktop 2-Column Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Left Column: Goals & Preferences */}
@@ -118,18 +227,18 @@ export default function SettingsPage() {
           {/* WEEKLY GOAL SETTING */}
           <section className="gym-card p-6 shadow-sm flex flex-col gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <div className="w-8 h-8 rounded-xl bg-accent-subtle border border-accent-subtle flex items-center justify-center text-accent">
                 <Target className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-xs uppercase font-bold tracking-wider text-zinc-400">
+                <span className="text-xs uppercase font-bold tracking-wider text-[var(--muted)]">
                   Weekly Target
                 </span>
-                <p className="text-sm font-extrabold text-white">Workout Frequency</p>
+                <p className="text-sm font-extrabold text-[var(--foreground)]">Workout Frequency</p>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="text-xs text-[var(--muted)] leading-relaxed">
               How many training sessions do you aim to complete each week?
             </p>
 
@@ -146,8 +255,8 @@ export default function SettingsPage() {
                     }}
                     className={`h-11 rounded-xl text-sm font-bold transition-all active:scale-95 ${
                       isSelected
-                        ? 'bg-emerald-500 text-emerald-950 shadow-md shadow-emerald-500/25 scale-105'
-                        : 'bg-zinc-950 border border-zinc-800 text-zinc-300 hover:border-zinc-700'
+                        ? 'bg-accent text-white shadow-md shadow-accent scale-105'
+                        : 'bg-[var(--card-subtle)] border border-[var(--card-border)] text-[var(--foreground)] hover:border-[var(--card-hover-border)]'
                     }`}
                   >
                     {num}
@@ -159,23 +268,23 @@ export default function SettingsPage() {
 
           {/* UNITS & FORMATTING */}
           <section className="gym-card p-6 shadow-sm flex flex-col gap-5">
-            <span className="text-xs uppercase font-bold tracking-wider text-zinc-400">
+            <span className="text-xs uppercase font-bold tracking-wider text-[var(--muted)]">
               Training Preferences
             </span>
 
             {/* Weight Unit Toggle */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
+                <div className="w-8 h-8 rounded-xl bg-[var(--card-subtle)] border border-[var(--card-border)] flex items-center justify-center text-[var(--muted)]">
                   <Scale className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-white">Weight Units</p>
-                  <p className="text-[11px] text-zinc-400">Kilograms (kg) or Pounds (lb)</p>
+                  <p className="text-sm font-bold text-[var(--foreground)]">Weight Units</p>
+                  <p className="text-[11px] text-[var(--muted)]">Kilograms (kg) or Pounds (lb)</p>
                 </div>
               </div>
 
-              <div className="flex bg-zinc-950 border border-zinc-800 p-1 rounded-xl">
+              <div className="flex bg-[var(--card-subtle)] border border-[var(--card-border)] p-1 rounded-xl">
                 {(['kg', 'lb'] as const).map((unit) => (
                   <button
                     key={unit}
@@ -186,8 +295,8 @@ export default function SettingsPage() {
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${
                       settings.weightUnit === unit
-                        ? 'bg-emerald-500 text-emerald-950 shadow-sm'
-                        : 'text-zinc-400 hover:text-white'
+                        ? 'bg-accent text-white shadow-sm'
+                        : 'text-[var(--muted)] hover:text-[var(--foreground)]'
                     }`}
                   >
                     {unit}
@@ -197,18 +306,18 @@ export default function SettingsPage() {
             </div>
 
             {/* Time Format Toggle */}
-            <div className="flex items-center justify-between pt-4 border-t border-zinc-800/70">
+            <div className="flex items-center justify-between pt-4 border-t border-[var(--card-border)]">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
+                <div className="w-8 h-8 rounded-xl bg-[var(--card-subtle)] border border-[var(--card-border)] flex items-center justify-center text-[var(--muted)]">
                   <Clock className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-white">Clock Format</p>
-                  <p className="text-[11px] text-zinc-400">12-Hour (AM/PM) or 24-Hour</p>
+                  <p className="text-sm font-bold text-[var(--foreground)]">Clock Format</p>
+                  <p className="text-[11px] text-[var(--muted)]">12-Hour (AM/PM) or 24-Hour</p>
                 </div>
               </div>
 
-              <div className="flex bg-zinc-950 border border-zinc-800 p-1 rounded-xl">
+              <div className="flex bg-[var(--card-subtle)] border border-[var(--card-border)] p-1 rounded-xl">
                 {(['12h', '24h'] as const).map((fmt) => (
                   <button
                     key={fmt}
@@ -219,8 +328,8 @@ export default function SettingsPage() {
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-all ${
                       settings.timeFormat === fmt
-                        ? 'bg-emerald-500 text-emerald-950 shadow-sm'
-                        : 'text-zinc-400 hover:text-white'
+                        ? 'bg-accent text-white shadow-sm'
+                        : 'text-[var(--muted)] hover:text-[var(--foreground)]'
                     }`}
                   >
                     {fmt}
@@ -230,14 +339,14 @@ export default function SettingsPage() {
             </div>
 
             {/* Audio Alerts Toggle */}
-            <div className="flex items-center justify-between pt-4 border-t border-zinc-800/70">
+            <div className="flex items-center justify-between pt-4 border-t border-[var(--card-border)]">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400">
+                <div className="w-8 h-8 rounded-xl bg-[var(--card-subtle)] border border-[var(--card-border)] flex items-center justify-center text-[var(--muted)]">
                   <Volume2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-white">Timer Audio Alerts</p>
-                  <p className="text-[11px] text-zinc-400">Sound chimes on countdown finish</p>
+                  <p className="text-sm font-bold text-[var(--foreground)]">Timer Audio Alerts</p>
+                  <p className="text-[11px] text-[var(--muted)]">Sound chimes on countdown finish</p>
                 </div>
               </div>
 
@@ -251,7 +360,7 @@ export default function SettingsPage() {
                   });
                 }}
                 className={`w-12 h-6 rounded-full transition-colors relative p-0.5 ${
-                  settings.soundEnabled ? 'bg-emerald-500' : 'bg-zinc-800'
+                  settings.soundEnabled ? 'bg-accent' : 'bg-[var(--border-subtle)]'
                 }`}
               >
                 <div
@@ -263,10 +372,10 @@ export default function SettingsPage() {
             </div>
 
             {/* Default Rest Timer Duration */}
-            <div className="flex items-center justify-between pt-4 border-t border-zinc-800/70">
+            <div className="flex items-center justify-between pt-4 border-t border-[var(--card-border)]">
               <div>
-                <p className="text-sm font-bold text-white">Default Rest Duration</p>
-                <p className="text-[11px] text-zinc-400">Initial timer countdown between sets</p>
+                <p className="text-sm font-bold text-[var(--foreground)]">Default Rest Duration</p>
+                <p className="text-[11px] text-[var(--muted)]">Initial timer countdown between sets</p>
               </div>
 
               <select
@@ -277,7 +386,7 @@ export default function SettingsPage() {
                     restTimerDefaultSeconds: parseInt(e.target.value, 10),
                   })
                 }
-                className="bg-zinc-950 border border-zinc-800 text-zinc-200 text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-emerald-500"
+                className="bg-[var(--card-subtle)] border border-[var(--card-border)] text-[var(--foreground)] text-xs font-semibold rounded-xl px-3 py-2 focus:outline-none focus:border-accent"
               >
                 <option value={45}>45 seconds</option>
                 <option value={60}>60 seconds (1m)</option>
@@ -293,11 +402,11 @@ export default function SettingsPage() {
         <div className="flex flex-col gap-6">
           {/* DATA BACKUP & RESTORE */}
           <section className="gym-card p-6 shadow-sm flex flex-col gap-4">
-            <span className="text-xs uppercase font-bold tracking-wider text-zinc-400">
+            <span className="text-xs uppercase font-bold tracking-wider text-[var(--muted)]">
               Data Management & Portability
             </span>
 
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="text-xs text-[var(--muted)] leading-relaxed">
               All workouts, personal records, and routines are securely preserved offline on your device via IndexedDB. Export an unencrypted JSON backup anytime or import into another browser.
             </p>
 
@@ -306,16 +415,16 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={handleExportData}
-                className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 active:scale-[0.99] border border-zinc-800 hover:border-zinc-700 text-zinc-200 font-semibold rounded-2xl flex items-center justify-center gap-2.5 text-xs transition-all shadow-sm"
+                className="w-full h-12 bg-[var(--card-subtle)] hover:bg-[var(--card)] active:scale-[0.99] border border-[var(--card-border)] hover:border-[var(--card-hover-border)] text-[var(--foreground)] font-semibold rounded-2xl flex items-center justify-center gap-2.5 text-xs transition-all shadow-sm"
               >
                 {exportSuccess ? (
                   <>
-                    <Check className="w-4 h-4 text-emerald-400" />
-                    <span className="text-emerald-400 font-bold">Backup Downloaded!</span>
+                    <Check className="w-4 h-4 text-accent" />
+                    <span className="text-accent font-bold">Backup Downloaded!</span>
                   </>
                 ) : (
                   <>
-                    <Download className="w-4 h-4 text-emerald-400" />
+                    <Download className="w-4 h-4 text-accent" />
                     <span>Export All Data (JSON)</span>
                   </>
                 )}
@@ -332,9 +441,9 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full h-12 bg-zinc-900 hover:bg-zinc-800 active:scale-[0.99] border border-zinc-800 hover:border-zinc-700 text-zinc-200 font-semibold rounded-2xl flex items-center justify-center gap-2.5 text-xs transition-all shadow-sm"
+                className="w-full h-12 bg-[var(--card-subtle)] hover:bg-[var(--card)] active:scale-[0.99] border border-[var(--card-border)] hover:border-[var(--card-hover-border)] text-[var(--foreground)] font-semibold rounded-2xl flex items-center justify-center gap-2.5 text-xs transition-all shadow-sm"
               >
-                <Upload className="w-4 h-4 text-emerald-400" />
+                <Upload className="w-4 h-4 text-accent" />
                 <span>Import Data Backup</span>
               </button>
 
@@ -383,13 +492,13 @@ export default function SettingsPage() {
 
           {/* APP INFO CARD */}
           <div className="gym-card p-6 flex flex-col items-center justify-center text-center gap-1.5">
-            <p className="text-xs font-extrabold text-white tracking-wider">
-              IRONTRACK · MOBILE & DESKTOP WORKOUT COMPANION
+            <p className="text-xs font-extrabold text-[var(--foreground)] tracking-wider">
+              SATATAM · DAILY GYM WORKOUT COMPANION
             </p>
-            <p className="text-[11px] text-zinc-400">
-              v1.0.0 · Local-First Offline PWA · Realtime Duo Engine
+            <p className="text-[11px] text-[var(--muted)]">
+              v1.0.0 · सततम् · Local-First Offline PWA · Realtime Duo Engine
             </p>
-            <p className="text-[10px] text-zinc-600 mt-1">
+            <p className="text-[10px] text-[var(--muted)] opacity-70 mt-1">
               Zero mock numbers · 100% Authentic workout analytics
             </p>
           </div>

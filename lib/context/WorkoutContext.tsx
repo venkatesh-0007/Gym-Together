@@ -92,23 +92,46 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Apply theme & accent to DOM immediately and mirror to localStorage
+  const applyThemeAndAccent = useCallback((themeMode?: 'dark' | 'light' | 'system', accent?: string) => {
+    if (typeof document === 'undefined') return;
+    const activeTheme = themeMode || 'dark';
+    const activeAccent = accent || 'red';
+
+    let resolvedTheme = activeTheme;
+    if (activeTheme === 'system') {
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      resolvedTheme = prefersDark ? 'dark' : 'light';
+    }
+
+    document.documentElement.setAttribute('data-theme', resolvedTheme);
+    document.documentElement.setAttribute('data-accent', activeAccent);
+
+    try {
+      localStorage.setItem('satatam_theme', activeTheme);
+      localStorage.setItem('satatam_accent', activeAccent);
+    } catch (_) {}
+  }, []);
+
   const refreshSettings = useCallback(async () => {
     try {
       const s = await storage.getSettings();
       setSettings(s);
+      applyThemeAndAccent(s.theme, s.accentColor);
     } catch (e) {
       console.error('Failed to load settings:', e);
     }
-  }, []);
+  }, [applyThemeAndAccent]);
 
   const updateSettings = useCallback(async (newSettings: UserSettings) => {
     try {
+      applyThemeAndAccent(newSettings.theme, newSettings.accentColor);
       await storage.saveSettings(newSettings);
       setSettings(newSettings);
     } catch (e) {
       console.error('Failed to save settings:', e);
     }
-  }, []);
+  }, [applyThemeAndAccent]);
 
   // Initial load from IndexedDB on mount
   useEffect(() => {
@@ -126,6 +149,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         setAllWorkouts(workoutsList);
         setTemplates(templatesList);
         setSettings(loadedSettings);
+        applyThemeAndAccent(loadedSettings.theme, loadedSettings.accentColor);
 
         if (savedActive && savedActive.status === 'active') {
           const now = Date.now();

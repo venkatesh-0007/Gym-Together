@@ -16,13 +16,13 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'IronTrack - Gym Workout Tracker & Partner Collab',
+  title: 'Satatam - Gym Workout Tracker & Partner Collab',
   description: 'Fast, native-feeling gym workout timer, duo partner workouts and community rankings',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'IronTrack',
+    title: 'Satatam',
   },
 };
 
@@ -32,11 +32,40 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full antialiased dark">
-      <body className="min-h-full bg-zinc-950 text-zinc-100 selection:bg-emerald-500 selection:text-zinc-950 font-sans">
+    <html lang="en" className="h-full antialiased" data-theme="dark" data-accent="red" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function() {
+              try {
+                var t = localStorage.getItem('satatam_theme');
+                if (!t) {
+                  var raw = localStorage.getItem('gym_settings');
+                  if (raw) { var s = JSON.parse(raw); t = s.theme; }
+                }
+                if (t === 'system' || !t) {
+                  t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+                }
+                document.documentElement.setAttribute('data-theme', t || 'dark');
+                
+                var a = localStorage.getItem('satatam_accent');
+                if (!a) {
+                  var raw = localStorage.getItem('gym_settings');
+                  if (raw) { var s = JSON.parse(raw); a = s.accentColor; }
+                }
+                document.documentElement.setAttribute('data-accent', a || 'red');
+              } catch(e) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.documentElement.setAttribute('data-accent', 'red');
+              }
+            })();`,
+          }}
+        />
+      </head>
+      <body className="min-h-full bg-[var(--background)] text-[var(--foreground)] font-sans">
         <AccountProvider>
           <WorkoutProvider>
-            <div className="w-full min-h-screen flex flex-col md:flex-row bg-zinc-950">
+            <div className="w-full min-h-screen flex flex-col md:flex-row bg-[var(--background)]">
               {/* Desktop Sidebar (visible on md+) */}
               <DesktopSidebar />
 

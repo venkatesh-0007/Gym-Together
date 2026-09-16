@@ -377,21 +377,21 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  You are currently using IronTrack in local guest mode. Create or sign in to an account to permanently safeguard your workout logs, PRs, and duo collaboration across sessions.
+                <p className="text-xs text-[var(--muted)] leading-relaxed">
+                  You are currently using Satatam in local guest mode. Create or sign in to an account to permanently safeguard your workout logs, PRs, and duo collaboration across sessions.
                 </p>
 
                 <div className="grid grid-cols-2 gap-2.5">
                   <Link
                     href="/login"
-                    className="py-3 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                    className="py-3 bg-[var(--card-subtle)] hover:bg-[var(--card)] active:scale-95 text-[var(--foreground)] font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm border border-[var(--card-border)]"
                   >
-                    <LogIn className="w-3.5 h-3.5 text-emerald-400" />
+                    <LogIn className="w-3.5 h-3.5 text-accent" />
                     <span>Sign In</span>
                   </Link>
                   <Link
                     href="/signup"
-                    className="py-3 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-emerald-950 font-black rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20"
+                    className="py-3 gym-btn-primary active:scale-95 font-black rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all"
                   >
                     <span>Create Account</span>
                   </Link>
@@ -720,7 +720,7 @@ export default function ProfilePage() {
               <LogOut className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Sign Out of IronTrack?</h3>
+              <h3 className="text-base font-bold text-white">Sign Out of Satatam?</h3>
               <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
                 Your workout history and PRs remain securely preserved on this device. You can log back in anytime.
               </p>

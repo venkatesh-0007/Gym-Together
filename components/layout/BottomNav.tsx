@@ -54,24 +54,24 @@ export default function BottomNav() {
         <div className="w-full max-w-md px-4 mb-2 pointer-events-auto animate-in slide-in-from-bottom-2 duration-200">
           <Link
             href="/active"
-            className="flex items-center justify-between px-4 py-3 bg-emerald-950/90 border border-emerald-500/40 rounded-2xl shadow-lg shadow-emerald-950/50 backdrop-blur-md active:scale-[0.99] transition-transform"
+            className="flex items-center justify-between px-4 py-3 bg-[var(--card)]/95 border border-accent rounded-2xl shadow-lg shadow-accent backdrop-blur-md active:scale-[0.99] transition-transform"
           >
             <div className="flex items-center gap-3">
               <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-accent"></span>
               </span>
               <div>
-                <p className="text-xs font-semibold text-emerald-300 uppercase tracking-wider">
+                <p className="text-xs font-semibold text-accent uppercase tracking-wider">
                   Active Workout
                 </p>
-                <p className="text-sm font-bold text-white font-mono">
+                <p className="text-sm font-bold text-[var(--foreground)] font-mono">
                   {formatElapsed(elapsedSeconds)}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-emerald-950 rounded-xl font-semibold text-xs shadow">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-accent text-white rounded-xl font-semibold text-xs shadow">
               <Play className="w-3.5 h-3.5 fill-current" />
               <span>Resume</span>
             </div>
@@ -82,7 +82,7 @@ export default function BottomNav() {
       {/* Main Bottom Bar */}
       <nav
         aria-label="Main Navigation"
-        className="w-full max-w-md bg-zinc-950/90 border-t border-zinc-800/80 backdrop-blur-lg px-1 pb-safe pt-2 pointer-events-auto"
+        className="w-full max-w-md bg-[var(--card)]/95 border-t border-[var(--card-border)] backdrop-blur-lg px-1 pb-safe pt-2 pointer-events-auto"
       >
         <div className="flex items-center justify-around h-14">
           {navItems.map((item) => {
@@ -94,20 +94,20 @@ export default function BottomNav() {
                 className={cn(
                   'flex flex-col items-center justify-center flex-1 h-full py-1 rounded-xl transition-colors active:scale-95 select-none relative',
                   item.isActive
-                    ? 'text-emerald-400'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    ? 'text-accent'
+                    : 'text-[var(--muted)] hover:text-[var(--foreground)]'
                 )}
               >
                 <div className="relative">
                   <Icon className={cn('w-5 h-5 transition-transform', item.isActive && 'scale-110 stroke-[2.5]')} />
                   {item.isActive && (
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-emerald-400 rounded-full" />
+                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-accent rounded-full" />
                   )}
                 </div>
                 <span
                   className={cn(
                     'text-[10px] font-medium mt-1 tracking-tight',
-                    item.isActive ? 'font-semibold text-emerald-400' : 'text-zinc-400'
+                    item.isActive ? 'font-semibold text-accent' : 'text-[var(--muted)]'
                   )}
                 >
                   {item.label}

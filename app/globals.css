@@ -1,14 +1,122 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   SATATAM DESIGN SYSTEM & THEME TOKENS
+   Default Accent: Crimson Red (#ef4444)
+   Light & Dark Mode Support
+   ========================================================================== */
+
 :root {
+  /* Theme Base Tokens (Dark by default) */
   --background: #09090b;
   --foreground: #f4f4f5;
   --card: #121215;
   --card-border: #222228;
-  --primary: #10b981;
-  --primary-foreground: #022c22;
+  --card-hover-border: #33333d;
+  --card-subtle: #18181c;
+  --muted: #a1a1aa;
+  --muted-bg: #1c1c21;
+  --border-subtle: #27272a;
+
+  /* Default Red Accent Color (#ef4444) */
+  --primary: #ef4444;
+  --primary-hover: #dc2626;
+  --primary-active: #b91c1c;
+  --primary-glow: rgba(239, 68, 68, 0.35);
+  --primary-subtle: rgba(239, 68, 68, 0.12);
+  --primary-border-subtle: rgba(239, 68, 68, 0.3);
+  --primary-foreground: #ffffff;
+
   --danger: #ef4444;
   --danger-foreground: #ffffff;
+}
+
+/* Light Theme Overrides */
+html[data-theme="light"] {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-border: #e2e8f0;
+  --card-hover-border: #cbd5e1;
+  --card-subtle: #f1f5f9;
+  --muted: #64748b;
+  --muted-bg: #f1f5f9;
+  --border-subtle: #e2e8f0;
+}
+
+/* Dark Theme (Explicit) */
+html[data-theme="dark"] {
+  --background: #09090b;
+  --foreground: #f4f4f5;
+  --card: #121215;
+  --card-border: #222228;
+  --card-hover-border: #33333d;
+  --card-subtle: #18181c;
+  --muted: #a1a1aa;
+  --muted-bg: #1c1c21;
+  --border-subtle: #27272a;
+}
+
+/* Accent Color Variations */
+html[data-accent="red"],
+:root {
+  --primary: #ef4444;
+  --primary-hover: #dc2626;
+  --primary-active: #b91c1c;
+  --primary-glow: rgba(239, 68, 68, 0.35);
+  --primary-subtle: rgba(239, 68, 68, 0.12);
+  --primary-border-subtle: rgba(239, 68, 68, 0.3);
+  --primary-foreground: #ffffff;
+}
+
+html[data-accent="emerald"] {
+  --primary: #10b981;
+  --primary-hover: #059669;
+  --primary-active: #047857;
+  --primary-glow: rgba(16, 185, 129, 0.35);
+  --primary-subtle: rgba(16, 185, 129, 0.12);
+  --primary-border-subtle: rgba(16, 185, 129, 0.3);
+  --primary-foreground: #022c22;
+}
+
+html[data-accent="blue"] {
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-active: #1d4ed8;
+  --primary-glow: rgba(59, 130, 246, 0.35);
+  --primary-subtle: rgba(59, 130, 246, 0.12);
+  --primary-border-subtle: rgba(59, 130, 246, 0.3);
+  --primary-foreground: #ffffff;
+}
+
+html[data-accent="violet"] {
+  --primary: #8b5cf6;
+  --primary-hover: #7c3aed;
+  --primary-active: #6d28d9;
+  --primary-glow: rgba(139, 92, 246, 0.35);
+  --primary-subtle: rgba(139, 92, 246, 0.12);
+  --primary-border-subtle: rgba(139, 92, 246, 0.3);
+  --primary-foreground: #ffffff;
+}
+
+html[data-accent="amber"] {
+  --primary: #f59e0b;
+  --primary-hover: #d97706;
+  --primary-active: #b45309;
+  --primary-glow: rgba(245, 158, 11, 0.35);
+  --primary-subtle: rgba(245, 158, 11, 0.12);
+  --primary-border-subtle: rgba(245, 158, 11, 0.3);
+  --primary-foreground: #451a03;
+}
+
+html[data-accent="rose"] {
+  --primary: #f43f5e;
+  --primary-hover: #e11d48;
+  --primary-active: #be123c;
+  --primary-glow: rgba(244, 63, 94, 0.35);
+  --primary-subtle: rgba(244, 63, 94, 0.12);
+  --primary-border-subtle: rgba(244, 63, 94, 0.3);
+  --primary-foreground: #ffffff;
 }
 
 @theme inline {
@@ -22,23 +130,54 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
+/* ==========================================================================
+   GLITCH-FREE REFINEMENTS: SELECTION, CLICKING & SCROLLING
+   ========================================================================== */
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Prevent accidental text selection highlights on interactive mobile & desktop elements */
+html,
+body,
+button,
+nav,
+aside,
+header,
+.gym-card {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Keep user inputs and notes fully selectable for editing */
+input,
+textarea,
+[contenteditable="true"],
+.selectable-text,
+p,
+span.font-mono {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
 html {
-  color-scheme: dark;
-  background-color: #09090b;
+  background-color: var(--background);
+  color: var(--foreground);
+  scroll-behavior: smooth;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 body {
-  background-color: #09090b;
-  color: #f4f4f5;
+  background-color: var(--background);
+  color: var(--foreground);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   overscroll-behavior-y: none;
   min-height: 100vh;
   min-height: 100dvh;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Safe area padding utilities for iOS / notch phones */
@@ -50,7 +189,7 @@ body {
   padding-top: max(env(safe-area-inset-top, 16px), 16px);
 }
 
-/* Custom scrollbars */
+/* Custom scrollbars tuned for dark and light */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -61,28 +200,31 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: var(--border-subtle);
   border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: var(--muted);
 }
 
-/* Structured Keyframe Animations */
+/* ==========================================================================
+   ANIMATIONS & KEYFRAMES
+   ========================================================================== */
+
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.25);
-    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: 0 0 25px -5px var(--primary-glow);
+    border-color: var(--primary-border-subtle);
   }
   50% {
-    box-shadow: 0 0 50px 2px rgba(16, 185, 129, 0.5);
-    border-color: rgba(16, 185, 129, 0.7);
+    box-shadow: 0 0 45px 3px var(--primary-glow);
+    border-color: var(--primary);
   }
 }
 
 .animate-pulse-glow {
-  animation: pulse-glow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation: pulse-glow 2.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes float-subtle {
@@ -101,7 +243,7 @@ body {
 @keyframes page-fade-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(5px);
   }
   to {
     opacity: 1;
@@ -110,38 +252,69 @@ body {
 }
 
 .animate-page-enter {
-  animation: page-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: page-fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Reusable Structured Card styling with hover transitions */
+/* ==========================================================================
+   REUSABLE DYNAMIC UTILITY CLASSES
+   ========================================================================== */
+
+.text-accent {
+  color: var(--primary);
+}
+
+.bg-accent {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.bg-accent-subtle {
+  background-color: var(--primary-subtle);
+}
+
+.border-accent {
+  border-color: var(--primary);
+}
+
+.border-accent-subtle {
+  border-color: var(--primary-border-subtle);
+}
+
+.shadow-accent {
+  box-shadow: 0 10px 25px -5px var(--primary-glow);
+}
+
+/* Refined Structured Card */
 .gym-card {
-  background: rgba(18, 18, 22, 0.85);
-  border: 1px solid rgba(39, 39, 42, 0.8);
+  background: var(--card);
+  border: 1px solid var(--card-border);
   border-radius: 1.5rem;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .gym-card:hover {
-  border-color: rgba(63, 63, 70, 0.9);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  border-color: var(--card-hover-border);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
 }
 
-/* Interactive primary button */
+/* Interactive primary button with dynamic accent */
 .gym-btn-primary {
-  background-color: #10b981;
-  color: #022c22;
+  background-color: var(--primary);
+  color: var(--primary-foreground);
   font-weight: 800;
   border-radius: 1rem;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 10px 20px -5px var(--primary-glow);
+  touch-action: manipulation;
 }
 
 .gym-btn-primary:hover {
-  background-color: #34d399;
+  background-color: var(--primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 14px 25px -5px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 14px 28px -5px var(--primary-glow);
 }
 
 .gym-btn-primary:active {
+  background-color: var(--primary-active);
   transform: scale(0.98);
 }

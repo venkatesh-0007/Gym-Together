@@ -1,6 +1,6 @@
 {
-  "name": "IronTrack Gym Tracker",
-  "short_name": "IronTrack",
+  "name": "Satatam Gym Tracker",
+  "short_name": "Satatam",
   "description": "Mobile-first native gym workout and timer tracking",
   "start_url": "/",
   "display": "standalone",

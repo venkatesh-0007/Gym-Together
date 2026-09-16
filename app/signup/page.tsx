@@ -71,14 +71,14 @@ export default function SignUpPage() {
       <div className="w-full gym-card p-6 sm:p-8 shadow-2xl flex flex-col gap-6 relative overflow-hidden">
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center shadow-xl shadow-emerald-950/60">
-            <Dumbbell className="w-7 h-7 text-zinc-950 stroke-[2.5]" />
+          <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center shadow-xl shadow-accent">
+            <Dumbbell className="w-7 h-7 text-white stroke-[2.5]" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white tracking-tight">
-              Create Lifter Account
+            <h1 className="text-2xl font-black text-[var(--foreground)] tracking-tight">
+              Create Satatam Account
             </h1>
-            <p className="text-xs text-zinc-400 mt-1">
+            <p className="text-xs text-[var(--muted)] mt-1">
               Start tracking daily gym workouts and hit personal records
             </p>
           </div>
@@ -104,10 +104,10 @@ export default function SignUpPage() {
           {/* Avatar Selector */}
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+              <label className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">
                 Choose Lifter Avatar
               </label>
-              <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-semibold">
+              <span className="text-[10px] text-accent flex items-center gap-1 font-semibold">
                 <Sparkles className="w-3 h-3" /> Selected: {avatar}
               </span>
             </div>
@@ -122,8 +122,8 @@ export default function SignUpPage() {
                   }}
                   className={`h-10 text-xl rounded-xl border flex items-center justify-center transition-all ${
                     avatar === av
-                      ? 'bg-emerald-950 border-emerald-500 scale-105 shadow-md shadow-emerald-950'
-                      : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
+                      ? 'bg-accent-subtle border-accent scale-105 shadow-md shadow-accent/20'
+                      : 'bg-[var(--card-subtle)] border-[var(--card-border)] hover:border-[var(--card-hover-border)]'
                   }`}
                 >
                   {av}
@@ -134,59 +134,59 @@ export default function SignUpPage() {
 
           {/* Full Name */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+            <label className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">
               Full Name
             </label>
             <div className="relative">
-              <User className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <User className="w-4 h-4 text-[var(--muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 required
                 placeholder="e.g. Alex Thorne"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 focus:border-emerald-500 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white placeholder:text-zinc-600 focus:outline-none transition-colors"
+                className="w-full bg-[var(--card-subtle)] border border-[var(--card-border)] focus:border-accent rounded-xl pl-10 pr-3.5 py-3 text-xs text-[var(--foreground)] placeholder:text-[var(--muted)]/60 focus:outline-none transition-colors"
               />
             </div>
           </div>
 
           {/* Email Address */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+            <label className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">
               Email Address
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Mail className="w-4 h-4 text-[var(--muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="email"
                 required
                 placeholder="alex@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 focus:border-emerald-500 rounded-xl pl-10 pr-3.5 py-3 text-xs text-white placeholder:text-zinc-600 focus:outline-none transition-colors"
+                className="w-full bg-[var(--card-subtle)] border border-[var(--card-border)] focus:border-accent rounded-xl pl-10 pr-3.5 py-3 text-xs text-[var(--foreground)] placeholder:text-[var(--muted)]/60 focus:outline-none transition-colors"
               />
             </div>
           </div>
 
           {/* Password */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+            <label className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">
               Password
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Lock className="w-4 h-4 text-[var(--muted)] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
                 placeholder="Min. 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 focus:border-emerald-500 rounded-xl pl-10 pr-10 py-3 text-xs text-white placeholder:text-zinc-600 focus:outline-none transition-colors"
+                className="w-full bg-[var(--card-subtle)] border border-[var(--card-border)] focus:border-accent rounded-xl pl-10 pr-10 py-3 text-xs text-[var(--foreground)] placeholder:text-[var(--muted)]/60 focus:outline-none transition-colors"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -195,22 +195,22 @@ export default function SignUpPage() {
 
           {/* Username / Handle (Optional) */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-              Username Handle <span className="text-zinc-500 font-normal">(optional)</span>
+            <label className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider">
+              Username Handle <span className="text-[var(--muted)] font-normal">(optional)</span>
             </label>
             <input
               type="text"
               placeholder="e.g. @alex_lifts"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-3 text-xs text-white placeholder:text-zinc-600 focus:outline-none font-mono transition-colors"
+              className="w-full bg-[var(--card-subtle)] border border-[var(--card-border)] focus:border-accent rounded-xl px-3.5 py-3 text-xs text-[var(--foreground)] placeholder:text-[var(--muted)]/60 focus:outline-none font-mono transition-colors"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] disabled:opacity-50 text-emerald-950 font-black rounded-2xl flex items-center justify-center gap-2 text-sm shadow-lg shadow-emerald-500/25 transition-all mt-2"
+            className="w-full h-12 gym-btn-primary active:scale-[0.98] disabled:opacity-50 font-black rounded-2xl flex items-center justify-center gap-2 text-sm transition-all mt-2"
           >
             <span>{loading ? 'Creating Account...' : 'Create Account'}</span>
             <ArrowRight className="w-4 h-4" />
@@ -218,12 +218,12 @@ export default function SignUpPage() {
         </form>
 
         {/* Links */}
-        <div className="flex flex-col gap-2.5 text-center text-xs border-t border-zinc-850 pt-4">
-          <p className="text-zinc-400">
+        <div className="flex flex-col gap-2.5 text-center text-xs border-t border-[var(--card-border)] pt-4">
+          <p className="text-[var(--muted)]">
             Already have an account?{' '}
             <Link
               href="/login"
-              className="text-emerald-400 font-bold hover:underline ml-1"
+              className="text-accent font-bold hover:underline ml-1"
             >
               Sign In here
             </Link>
@@ -231,7 +231,7 @@ export default function SignUpPage() {
 
           <Link
             href="/"
-            className="text-zinc-500 hover:text-zinc-400 text-[11px] py-1 transition-colors"
+            className="text-[var(--muted)] hover:text-[var(--foreground)] text-[11px] py-1 transition-colors"
           >
             Continue as Guest without signing in
           </Link>

@@ -1,5 +1,5 @@
-// IronTrack Service Worker for offline shell support
-const CACHE_NAME = 'irontrack-v1';
+// Satatam Service Worker for offline shell support
+const CACHE_NAME = 'satatam-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',

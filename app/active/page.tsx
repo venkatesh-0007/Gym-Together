@@ -46,7 +46,7 @@ export default function ActiveWorkoutPage() {
           onClick={async () => {
             await startWorkout(undefined, activeProfile.id);
           }}
-          className="mt-6 w-full max-w-xs h-14 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-emerald-950 font-black rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all text-base"
+          className="mt-6 w-full max-w-xs h-14 gym-btn-primary active:scale-[0.98] font-black rounded-2xl flex items-center justify-center gap-2 text-base"
         >
           <Play className="w-5 h-5 fill-current" />
           Start Workout
@@ -64,18 +64,18 @@ export default function ActiveWorkoutPage() {
         <button
           type="button"
           onClick={() => router.push('/')}
-          className="flex items-center gap-1 text-zinc-400 hover:text-white text-xs font-semibold py-1.5 px-2.5 rounded-xl hover:bg-zinc-900 transition-colors active:scale-95"
+          className="flex items-center gap-1 text-[var(--muted)] hover:text-[var(--foreground)] text-xs font-semibold py-1.5 px-2.5 rounded-xl hover:bg-[var(--card-subtle)] transition-colors active:scale-95"
         >
           <ChevronLeft className="w-4 h-4" />
           <span>Dashboard</span>
         </button>
 
-        <div className="flex items-center gap-2 px-3 py-1 bg-emerald-950/60 border border-emerald-500/30 rounded-full">
+        <div className="flex items-center gap-2 px-3 py-1 bg-accent-subtle border border-accent-subtle rounded-full">
           <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent"></span>
           </span>
-          <span className="text-[11px] font-bold text-emerald-300 uppercase tracking-wider">
+          <span className="text-[11px] font-bold text-accent uppercase tracking-wider">
             Recording Live
           </span>
         </div>
@@ -87,7 +87,7 @@ export default function ActiveWorkoutPage() {
             triggerHaptic('light');
             setIsRestTimerOpen(true);
           }}
-          className="p-2 text-zinc-400 hover:text-emerald-400 rounded-xl bg-zinc-900 border border-zinc-800 transition-all hover:scale-105 active:scale-95 shadow-sm"
+          className="p-2 text-[var(--muted)] hover:text-accent rounded-xl bg-[var(--card-subtle)] border border-[var(--card-border)] transition-all hover:scale-105 active:scale-95 shadow-sm"
           title="Open rest timer"
         >
           <Timer className="w-4 h-4" />
@@ -97,7 +97,7 @@ export default function ActiveWorkoutPage() {
       {/* Routine Title if from Template */}
       {activeWorkout.templateName && (
         <div className="text-center -mb-2">
-          <span className="px-3 py-1 bg-zinc-900 border border-zinc-800 rounded-full text-xs font-semibold text-zinc-300">
+          <span className="px-3 py-1 bg-[var(--card-subtle)] border border-[var(--card-border)] rounded-full text-xs font-semibold text-[var(--foreground)]">
             {activeWorkout.templateName}
           </span>
         </div>
@@ -108,20 +108,20 @@ export default function ActiveWorkoutPage() {
         {/* LEFT COLUMN: HERO LIVE TIMER & STOP WORKOUT */}
         <div className="md:col-span-5 flex flex-col gap-5">
           {/* HERO LIVE TIMER CARD */}
-          <div className="w-full flex flex-col items-center justify-center py-8 px-4 bg-zinc-900/70 border border-zinc-800 rounded-3xl shadow-2xl relative overflow-hidden animate-pulse-glow transition-all">
-            <span className="text-xs uppercase font-extrabold tracking-widest text-zinc-400 mb-1">
+          <div className="w-full flex flex-col items-center justify-center py-8 px-4 gym-card shadow-2xl relative overflow-hidden animate-pulse-glow transition-all">
+            <span className="text-xs uppercase font-extrabold tracking-widest text-[var(--muted)] mb-1">
               Active Workout Time
             </span>
 
             {/* Big Live Clock */}
-            <div className="text-5xl sm:text-6xl font-black font-mono tracking-tight text-white my-2 select-none">
+            <div className="text-5xl sm:text-6xl font-black font-mono tracking-tight text-[var(--foreground)] my-2 select-none">
               {formatElapsed(elapsedSeconds)}
             </div>
 
             {/* Started Time */}
-            <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium mt-1">
+            <div className="flex items-center gap-1.5 text-xs text-[var(--muted)] font-medium mt-1">
               <span>Started at</span>
-              <span className="text-zinc-200 font-semibold">{startTimeStr}</span>
+              <span className="text-[var(--foreground)] font-semibold">{startTimeStr}</span>
             </div>
           </div>
 

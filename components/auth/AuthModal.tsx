@@ -79,7 +79,7 @@ export default function AuthModal({
           setErrorMessage(res.errorMessage || 'Failed to create account.');
           triggerHaptic('warning');
         } else {
-          setSuccessMessage('Account created! Welcome to IronTrack.');
+          setSuccessMessage('Account created! Welcome to Satatam.');
           setTimeout(() => {
             onClose();
             if (onSuccess) onSuccess();
@@ -95,26 +95,26 @@ export default function AuthModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-5 animate-in zoom-in-95 duration-200 relative max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-md bg-[var(--card)] border border-[var(--card-border)] rounded-3xl p-6 shadow-2xl flex flex-col gap-5 animate-in zoom-in-95 duration-200 relative max-h-[90vh] overflow-y-auto">
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-zinc-800 transition-colors"
+          className="absolute top-5 right-5 p-2 text-[var(--muted)] hover:text-[var(--foreground)] rounded-xl hover:bg-[var(--card-subtle)] transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Modal Header */}
         <div className="flex flex-col items-center text-center gap-2 pt-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-950/50">
-            <Dumbbell className="w-6 h-6 text-zinc-950 stroke-[2.5]" />
+          <div className="w-12 h-12 rounded-2xl bg-accent flex items-center justify-center shadow-lg shadow-accent">
+            <Dumbbell className="w-6 h-6 text-white stroke-[2.5]" />
           </div>
           <div>
-            <h2 className="text-xl font-extrabold text-white tracking-tight">
-              {mode === 'login' ? 'Welcome Back' : 'Join IronTrack'}
+            <h2 className="text-xl font-extrabold text-[var(--foreground)] tracking-tight">
+              {mode === 'login' ? 'Welcome Back' : 'Join Satatam'}
             </h2>
-            <p className="text-xs text-zinc-400 mt-0.5">
+            <p className="text-xs text-[var(--muted)] mt-0.5">
               {mode === 'login'
                 ? 'Sign in to access your workout history and PR records'
                 : 'Create your lifter account to track workouts and compete'}
@@ -277,7 +277,7 @@ export default function AuthModal({
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] disabled:opacity-50 text-emerald-950 font-bold rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-emerald-500/20 transition-all mt-2"
+            className="w-full h-11 gym-btn-primary active:scale-[0.98] disabled:opacity-50 font-bold rounded-xl flex items-center justify-center gap-2 text-xs transition-all mt-2"
           >
             <span>{loading ? 'Processing...' : mode === 'login' ? 'Sign In' : 'Create Account'}</span>
             <ArrowRight className="w-3.5 h-3.5" />

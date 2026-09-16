@@ -58,11 +58,14 @@ export interface BodyWeightEntry {
   notes?: string;
 }
 
+export type AccentColor = 'red' | 'emerald' | 'blue' | 'violet' | 'amber' | 'rose';
+
 export interface UserSettings {
   weeklyGoal: number; // e.g. 3, 4, 5
   weightUnit: 'kg' | 'lb';
   timeFormat: '12h' | '24h';
   theme: 'dark' | 'light' | 'system';
+  accentColor: AccentColor;
   soundEnabled: boolean;
   restTimerDefaultSeconds: number;
 }
@@ -81,6 +84,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   weightUnit: 'kg',
   timeFormat: '12h',
   theme: 'dark',
+  accentColor: 'red',
   soundEnabled: true,
   restTimerDefaultSeconds: 90,
 };

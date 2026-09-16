@@ -13,19 +13,19 @@ export default function Header() {
   const streak = calculateStreak(allWorkouts);
 
   return (
-    <header className="w-full flex items-center justify-between px-5 pt-safe pt-3 pb-3 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-30 border-b border-zinc-900">
+    <header className="w-full flex items-center justify-between px-5 pt-safe pt-3 pb-3 bg-[var(--card)]/90 backdrop-blur-md sticky top-0 z-30 border-b border-[var(--card-border)]">
       <Link href="/" className="flex items-center gap-2.5 active:opacity-80 transition-opacity">
-        <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 flex items-center justify-center shadow-md shadow-emerald-950/40">
-          <Dumbbell className="w-4 h-4 text-zinc-950 stroke-[2.5]" />
+        <div className="w-8 h-8 rounded-xl bg-accent flex items-center justify-center shadow-md shadow-accent">
+          <Dumbbell className="w-4 h-4 text-white stroke-[2.5]" />
         </div>
-        <span className="font-bold tracking-tight text-lg text-white">
-          Iron<span className="text-emerald-400">Track</span>
+        <span className="font-bold tracking-tight text-lg text-[var(--foreground)]">
+          Satat<span className="text-accent">am</span>
         </span>
       </Link>
 
       <div className="flex items-center gap-2">
         {/* Streak Badge */}
-        <div className="flex items-center gap-1.5 px-3 py-1 bg-zinc-900 border border-zinc-800/80 rounded-full text-xs font-semibold">
+        <div className="flex items-center gap-1.5 px-3 py-1 bg-[var(--card-subtle)] border border-[var(--card-border)] rounded-full text-xs font-semibold">
           <Flame
             className={`w-4 h-4 ${
               streak.currentStreak > 0 ? 'text-amber-500 fill-amber-500 animate-pulse' : 'text-zinc-500'
@@ -40,7 +40,7 @@ export default function Header() {
         {isAuthenticated ? (
           <Link
             href="/profile"
-            className="w-8 h-8 rounded-full bg-zinc-800 border border-emerald-500/60 flex items-center justify-center text-sm shadow hover:border-emerald-400 transition-all active:scale-95 ring-2 ring-emerald-500/20"
+            className="w-8 h-8 rounded-full bg-[var(--card-subtle)] border border-accent flex items-center justify-center text-sm shadow hover:border-accent transition-all active:scale-95 ring-2 ring-accent/20"
             title={`Signed in as ${activeProfile.name}`}
           >
             <span>{activeProfile.avatar}</span>
@@ -48,7 +48,7 @@ export default function Header() {
         ) : (
           <Link
             href="/login"
-            className="px-2.5 py-1 bg-emerald-500 text-emerald-950 text-[11px] font-bold rounded-lg shadow-sm shadow-emerald-500/20 active:scale-95 transition-transform"
+            className="px-2.5 py-1 bg-accent text-white text-[11px] font-bold rounded-lg shadow-sm shadow-accent active:scale-95 transition-transform"
           >
             Sign In
           </Link>
