@@ -80,3 +80,16 @@ export function getFirestoreDb(): Firestore | null {
     return null;
   }
 }
+
+export function getFirebaseAuth() {
+  const app = getFirebaseApp();
+  if (!app) return null;
+  try {
+    const { getAuth } = require('firebase/auth');
+    return getAuth(app);
+  } catch (err) {
+    console.warn('Firebase Auth error:', err);
+    return null;
+  }
+}
+

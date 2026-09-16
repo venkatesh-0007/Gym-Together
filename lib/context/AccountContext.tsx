@@ -2,11 +2,18 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { UserProfile, DEFAULT_PROFILES, getLevelTitle } from '../types/account';
+import { AuthUser, LogInPayload, SignUpPayload, AuthResult } from '../auth/types';
+import { authService } from '../auth/authService';
 import { triggerHaptic } from '../utils/haptics';
 
 interface AccountContextType {
   activeProfile: UserProfile;
   allProfiles: UserProfile[];
+  currentUser: AuthUser | null;
+  isAuthenticated: boolean;
+  login: (payload: LogInPayload) => Promise<AuthResult>;
+  signup: (payload: SignUpPayload) => Promise<AuthResult>;
+  logout: () => Promise<void>;
   switchProfile: (profileId: string) => void;
   createProfile: (profile: Omit<UserProfile, 'id' | 'createdAt' | 'buddyCode' | 'levelTitle'>) => UserProfile;
   updateProfile: (updated: Partial<UserProfile>) => void;
@@ -22,31 +29,51 @@ const AccountContext = createContext<AccountContextType | undefined>(undefined);
 export function AccountProvider({ children }: { children: React.ReactNode }) {
   const [allProfiles, setAllProfiles] = useState<UserProfile[]>(DEFAULT_PROFILES);
   const [activeProfile, setActiveProfileState] = useState<UserProfile>(DEFAULT_PROFILES[0]);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
 
-  // Load from local storage
+  // Initialize auth session and local profiles
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     try {
+      // 1. Check active session
+      const session = authService.getSession();
+      if (session) {
+        setCurrentUser(session);
+        setActiveProfileState(session);
+      }
+
+      // 2. Load stored profiles list
       const storedProfilesRaw = localStorage.getItem(STORAGE_PROFILES_KEY);
-      let loadedProfiles = DEFAULT_PROFILES;
+      let loadedProfiles: UserProfile[] = DEFAULT_PROFILES;
       if (storedProfilesRaw) {
         const parsed = JSON.parse(storedProfilesRaw);
         if (Array.isArray(parsed) && parsed.length > 0) {
           loadedProfiles = parsed;
         }
       }
+
+      // Also merge accounts from authService
+      const registeredAccounts = authService.getAllAccounts();
+      registeredAccounts.forEach((acc) => {
+        if (!loadedProfiles.some((p) => p.id === acc.id)) {
+          loadedProfiles.push({ ...acc.profile, email: acc.email });
+        }
+      });
+
       setAllProfiles(loadedProfiles);
 
-      const activeId = localStorage.getItem(STORAGE_ACTIVE_ID_KEY);
-      const matched = loadedProfiles.find((p) => p.id === activeId);
-      if (matched) {
-        setActiveProfileState(matched);
-      } else {
-        setActiveProfileState(loadedProfiles[0]);
+      if (!session) {
+        const activeId = localStorage.getItem(STORAGE_ACTIVE_ID_KEY);
+        const matched = loadedProfiles.find((p) => p.id === activeId);
+        if (matched) {
+          setActiveProfileState(matched);
+        } else {
+          setActiveProfileState(loadedProfiles[0]);
+        }
       }
-    } catch {
-      // Fallback
+    } catch (e) {
+      console.error('Error initializing accounts/auth:', e);
     }
   }, []);
 
@@ -62,6 +89,59 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const login = useCallback(async (payload: LogInPayload): Promise<AuthResult> => {
+    const result = await authService.logIn(payload);
+    if (result.success && result.user) {
+      setCurrentUser(result.user);
+      setActiveProfileState(result.user);
+
+      setAllProfiles((prev) => {
+        const exists = prev.some((p) => p.id === result.user!.id);
+        const updated = exists
+          ? prev.map((p) => (p.id === result.user!.id ? result.user! : p))
+          : [...prev, result.user!];
+        persistProfiles(updated, result.user!.id);
+        return updated;
+      });
+
+      triggerHaptic('success');
+    }
+    return result;
+  }, []);
+
+  const signup = useCallback(async (payload: SignUpPayload): Promise<AuthResult> => {
+    const result = await authService.signUp(payload);
+    if (result.success && result.user) {
+      setCurrentUser(result.user);
+      setActiveProfileState(result.user);
+
+      setAllProfiles((prev) => {
+        const updated = [...prev, result.user!];
+        persistProfiles(updated, result.user!.id);
+        return updated;
+      });
+
+      triggerHaptic('success');
+    }
+    return result;
+  }, []);
+
+  const logout = useCallback(async () => {
+    await authService.logOut();
+    setCurrentUser(null);
+
+    // Fallback to guest profile or first profile
+    const guestProfile: UserProfile = {
+      ...DEFAULT_PROFILES[0],
+      id: `guest_${Date.now()}`,
+      name: 'Guest Lifter',
+      username: '@guest',
+      isGuest: true,
+    };
+    setActiveProfileState(guestProfile);
+    triggerHaptic('warning');
+  }, []);
+
   const switchProfile = useCallback(
     (profileId: string) => {
       const found = allProfiles.find((p) => p.id === profileId);
@@ -69,6 +149,22 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         triggerHaptic('medium');
         setActiveProfileState(found);
         persistProfiles(allProfiles, found.id);
+
+        // If switching to an account in authService, update session
+        const authAccounts = authService.getAllAccounts();
+        const matchedAuth = authAccounts.find((a) => a.id === found.id);
+        if (matchedAuth) {
+          const authUser: AuthUser = {
+            ...matchedAuth.profile,
+            email: matchedAuth.email,
+            authProvider: 'local',
+          };
+          authService.setSession(authUser);
+          setCurrentUser(authUser);
+        } else {
+          authService.setSession(null);
+          setCurrentUser(null);
+        }
       }
     },
     [allProfiles]
@@ -101,6 +197,13 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       const updatedProfile = { ...activeProfile, ...updatedData };
       setActiveProfileState(updatedProfile);
 
+      if (currentUser && currentUser.id === activeProfile.id) {
+        const updatedAuth: AuthUser = { ...currentUser, ...updatedData };
+        setCurrentUser(updatedAuth);
+        authService.setSession(updatedAuth);
+        authService.updateAccountProfile(activeProfile.id, updatedData);
+      }
+
       const updatedList = allProfiles.map((p) =>
         p.id === activeProfile.id ? updatedProfile : p
       );
@@ -108,7 +211,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       persistProfiles(updatedList, updatedProfile.id);
       triggerHaptic('light');
     },
-    [activeProfile, allProfiles]
+    [activeProfile, currentUser, allProfiles]
   );
 
   const deleteProfile = useCallback(
@@ -134,11 +237,18 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     [activeProfile.levelTitle, updateProfile]
   );
 
+  const isAuthenticated = Boolean(currentUser && !currentUser.isGuest);
+
   return (
     <AccountContext.Provider
       value={{
         activeProfile,
         allProfiles,
+        currentUser,
+        isAuthenticated,
+        login,
+        signup,
+        logout,
         switchProfile,
         createProfile,
         updateProfile,

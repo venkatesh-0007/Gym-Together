@@ -2,12 +2,15 @@ export interface UserProfile {
   id: string;
   name: string;
   username: string; // e.g. @lifter
+  email?: string;
   avatar: string; // emoji or avatar key
   bio: string;
   buddyCode: string; // e.g. GYM-7492
   levelTitle: string; // e.g. "Gym Novice", "Iron Starter"
   weeklyGoal: number;
   createdAt: string;
+  authProvider?: 'local' | 'firebase';
+  isGuest?: boolean;
 }
 
 export const PRESET_AVATARS = [

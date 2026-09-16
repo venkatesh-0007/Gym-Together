@@ -9,7 +9,7 @@ import { calculateStreak } from '@/lib/calculations/streak';
 
 export default function Header() {
   const { allWorkouts } = useWorkout();
-  const { activeProfile } = useAccount();
+  const { activeProfile, isAuthenticated } = useAccount();
   const streak = calculateStreak(allWorkouts);
 
   return (
@@ -36,14 +36,23 @@ export default function Header() {
           </span>
         </div>
 
-        {/* User Profile Quick Avatar Button */}
-        <Link
-          href="/profile"
-          className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-sm shadow hover:border-emerald-500 transition-colors active:scale-95"
-          title={`Signed in as ${activeProfile.name}`}
-        >
-          <span>{activeProfile.avatar}</span>
-        </Link>
+        {/* User Profile / Auth Link */}
+        {isAuthenticated ? (
+          <Link
+            href="/profile"
+            className="w-8 h-8 rounded-full bg-zinc-800 border border-emerald-500/60 flex items-center justify-center text-sm shadow hover:border-emerald-400 transition-all active:scale-95 ring-2 ring-emerald-500/20"
+            title={`Signed in as ${activeProfile.name}`}
+          >
+            <span>{activeProfile.avatar}</span>
+          </Link>
+        ) : (
+          <Link
+            href="/login"
+            className="px-2.5 py-1 bg-emerald-500 text-emerald-950 text-[11px] font-bold rounded-lg shadow-sm shadow-emerald-500/20 active:scale-95 transition-transform"
+          >
+            Sign In
+          </Link>
+        )}
       </div>
     </header>
   );

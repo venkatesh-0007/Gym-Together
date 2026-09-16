@@ -17,6 +17,10 @@ import {
   Settings,
   ChevronRight,
   ShieldCheck,
+  LogIn,
+  LogOut,
+  Mail,
+  Lock,
 } from 'lucide-react';
 import { useAccount } from '@/lib/context/AccountContext';
 import { useWorkout } from '@/lib/context/WorkoutContext';
@@ -33,6 +37,9 @@ export default function ProfilePage() {
   const {
     activeProfile,
     allProfiles,
+    currentUser,
+    isAuthenticated,
+    logout,
     switchProfile,
     createProfile,
     updateProfile,
@@ -46,6 +53,7 @@ export default function ProfilePage() {
   const [isSwitchOpen, setIsSwitchOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isFirebaseOpen, setIsFirebaseOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Edit fields
   const [nameInput, setNameInput] = useState(activeProfile.name);
@@ -303,8 +311,95 @@ export default function ProfilePage() {
           </section>
         </div>
 
-        {/* RIGHT COLUMN: MULTI-PERSON PROFILES & CLOUD SYNC */}
+        {/* RIGHT COLUMN: ACCOUNT AUTHENTICATION & MULTI-PERSON PROFILES */}
         <div className="flex flex-col gap-6">
+          {/* AUTHENTICATION & ACCOUNT STATUS */}
+          <section className="gym-card p-6 shadow-sm flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs uppercase font-extrabold tracking-wider text-zinc-400">
+                  Account Credentials
+                </span>
+              </div>
+
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  isAuthenticated
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-zinc-800 text-zinc-400'
+                }`}
+              >
+                {isAuthenticated ? 'Authenticated' : 'Guest Mode'}
+              </span>
+            </div>
+
+            {isAuthenticated ? (
+              <div className="flex flex-col gap-3">
+                <div className="bg-zinc-950/70 border border-zinc-800/80 rounded-2xl p-3.5 flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-semibold">Registered Email</span>
+                    <span className="text-zinc-200 font-medium font-mono">{currentUser?.email}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-semibold">Security Engine</span>
+                    <span className="text-emerald-400 font-medium">
+                      {currentUser?.authProvider === 'firebase'
+                        ? 'Firebase Cloud Auth'
+                        : 'Web Crypto SHA-256 Engine'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-zinc-500 font-semibold">Session Status</span>
+                    <span className="flex items-center gap-1.5 text-emerald-400 text-[11px] font-semibold">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                      Active & Synced
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowLogoutConfirm(true)}
+                    className="flex-1 py-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-rose-900/60 text-rose-400 hover:text-rose-300 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out</span>
+                  </button>
+                  <Link
+                    href="/login"
+                    className="py-2.5 px-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs font-semibold rounded-xl flex items-center justify-center gap-1 transition-all"
+                  >
+                    <span>Switch</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  You are currently using IronTrack in local guest mode. Create or sign in to an account to permanently safeguard your workout logs, PRs, and duo collaboration across sessions.
+                </p>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  <Link
+                    href="/login"
+                    className="py-3 bg-zinc-800 hover:bg-zinc-700 active:scale-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                  >
+                    <LogIn className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Sign In</span>
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="py-3 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-emerald-950 font-black rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20"
+                  >
+                    <span>Create Account</span>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </section>
+
           {/* MULTI-PERSON PROFILE SWITCHER */}
           <section className="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-6 shadow-sm flex flex-col gap-4 hover:border-zinc-700 transition-all">
             <div className="flex items-center justify-between">
@@ -611,6 +706,42 @@ export default function ProfilePage() {
                 className="flex-1 py-2.5 bg-emerald-500 text-emerald-950 text-xs font-bold rounded-xl"
               >
                 Save Keys
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SIGN OUT CONFIRMATION MODAL */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
+              <LogOut className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white">Sign Out of IronTrack?</h3>
+              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                Your workout history and PRs remain securely preserved on this device. You can log back in anytime.
+              </p>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 py-2.5 bg-zinc-800 text-zinc-300 text-xs font-semibold rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await logout();
+                  setShowLogoutConfirm(false);
+                }}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl shadow-md shadow-rose-600/25 transition-all"
+              >
+                Sign Out
               </button>
             </div>
           </div>

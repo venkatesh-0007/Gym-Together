@@ -14,6 +14,8 @@ import {
   Sparkles,
   Play,
   Flame,
+  LogIn,
+  LogOut,
 } from 'lucide-react';
 import { useWorkout } from '@/lib/context/WorkoutContext';
 import { useAccount } from '@/lib/context/AccountContext';
@@ -24,7 +26,7 @@ import { cn } from '@/lib/utils/cn';
 export default function DesktopSidebar() {
   const pathname = usePathname();
   const { activeWorkout, elapsedSeconds, allWorkouts } = useWorkout();
-  const { activeProfile } = useAccount();
+  const { activeProfile, currentUser, isAuthenticated, logout } = useAccount();
   const streak = calculateStreak(allWorkouts);
 
   const navItems = [
@@ -128,21 +130,46 @@ export default function DesktopSidebar() {
           </span>
         </div>
 
-        {/* Profile Link */}
-        <Link
-          href="/profile"
-          className="flex items-center gap-3 p-2.5 rounded-2xl bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-850 hover:border-zinc-700 transition-all group active:scale-98"
-        >
-          <div className="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-lg shadow">
-            {activeProfile.avatar}
+        {/* Profile Link or Auth Prompt */}
+        {isAuthenticated ? (
+          <div className="flex items-center justify-between p-2 rounded-2xl bg-zinc-900/50 border border-zinc-850">
+            <Link
+              href="/profile"
+              className="flex items-center gap-2.5 flex-1 min-w-0 group hover:opacity-80 transition-opacity"
+            >
+              <div className="w-8 h-8 rounded-xl bg-zinc-800 border border-emerald-500/40 flex items-center justify-center text-base shadow flex-shrink-0">
+                {activeProfile.avatar}
+              </div>
+              <div className="truncate flex-1">
+                <p className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors truncate">
+                  {activeProfile.name}
+                </p>
+                <p className="text-[10px] text-zinc-500 truncate">
+                  {currentUser?.email || activeProfile.levelTitle}
+                </p>
+              </div>
+            </Link>
+
+            <button
+              type="button"
+              onClick={() => logout()}
+              title="Sign Out"
+              className="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-zinc-850 rounded-xl transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
           </div>
-          <div className="truncate flex-1">
-            <p className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors truncate">
-              {activeProfile.name}
-            </p>
-            <p className="text-[10px] text-zinc-500 truncate">{activeProfile.levelTitle}</p>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            <Link
+              href="/login"
+              className="w-full py-2.5 px-3 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-emerald-950 font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In / Register</span>
+            </Link>
           </div>
-        </Link>
+        )}
       </div>
     </aside>
   );
