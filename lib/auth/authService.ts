@@ -128,6 +128,47 @@ class AuthService {
           authProvider: 'firebase',
         };
 
+        // Sync profile to Cloud Firestore
+        try {
+          const { getFirestoreDb } = await import('../firebase/config');
+          const db = getFirestoreDb();
+          if (db) {
+            const { doc, setDoc } = await import('firebase/firestore');
+            await setDoc(doc(db, 'users', fbUser.uid), userProfile, { merge: true });
+          }
+        } catch (dbErr) {
+          console.warn('Could not persist profile to Firestore:', dbErr);
+        }
+
+        // Cache into local storage
+        const accounts = this.getStoredAccounts();
+        const accountIdx = accounts.findIndex((a) => a.id === fbUser.uid || a.email === email);
+        const storedAcc: StoredAccount = {
+          id: fbUser.uid,
+          email: email,
+          passwordHash: 'firebase_managed',
+          salt: 'firebase_managed',
+          profile: {
+            id: fbUser.uid,
+            name: userProfile.name,
+            username: userProfile.username,
+            avatar: userProfile.avatar,
+            bio: userProfile.bio,
+            buddyCode: userProfile.buddyCode,
+            levelTitle: userProfile.levelTitle,
+            weeklyGoal: userProfile.weeklyGoal,
+            createdAt: userProfile.createdAt,
+          },
+          createdAt: userProfile.createdAt,
+          lastLoginAt: userProfile.createdAt,
+        };
+        if (accountIdx >= 0) {
+          accounts[accountIdx] = storedAcc;
+        } else {
+          accounts.push(storedAcc);
+        }
+        this.saveStoredAccounts(accounts);
+
         this.setSession(userProfile);
         return { success: true, user: userProfile };
       } catch (fbErr: any) {
@@ -223,6 +264,22 @@ class AuthService {
         );
         const fbUser = userCredential.user;
 
+        // Try reading user profile from Cloud Firestore for cross-device synchronization
+        let firestoreProfile: any = null;
+        try {
+          const { getFirestoreDb } = await import('../firebase/config');
+          const db = getFirestoreDb();
+          if (db) {
+            const { doc, getDoc } = await import('firebase/firestore');
+            const snap = await getDoc(doc(db, 'users', fbUser.uid));
+            if (snap.exists()) {
+              firestoreProfile = snap.data();
+            }
+          }
+        } catch (dbErr) {
+          console.warn('Could not retrieve profile from Firestore:', dbErr);
+        }
+
         // Check if profile exists in local registry or reconstruct
         const accounts = this.getStoredAccounts();
         const existing = accounts.find((a) => a.id === fbUser.uid || a.email === email);
@@ -230,19 +287,48 @@ class AuthService {
 
         const authUser: AuthUser = {
           id: fbUser.uid,
-          name: fbUser.displayName || existing?.profile.name || 'Lifter',
+          name: firestoreProfile?.name || fbUser.displayName || existing?.profile.name || 'Lifter',
           email: email,
           username:
+            firestoreProfile?.username ||
             existing?.profile.username ||
             `@${(fbUser.displayName || 'lifter').toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
-          avatar: existing?.profile.avatar || '⚡',
-          bio: existing?.profile.bio || '',
-          buddyCode: existing?.profile.buddyCode || randomCode,
-          levelTitle: existing?.profile.levelTitle || 'Gym Novice',
-          weeklyGoal: existing?.profile.weeklyGoal || 4,
-          createdAt: existing?.profile.createdAt || new Date().toISOString(),
+          avatar: firestoreProfile?.avatar || existing?.profile.avatar || '⚡',
+          bio: firestoreProfile?.bio || existing?.profile.bio || '',
+          buddyCode: firestoreProfile?.buddyCode || existing?.profile.buddyCode || randomCode,
+          levelTitle: firestoreProfile?.levelTitle || existing?.profile.levelTitle || 'Gym Novice',
+          weeklyGoal: firestoreProfile?.weeklyGoal || existing?.profile.weeklyGoal || 4,
+          createdAt: firestoreProfile?.createdAt || existing?.profile.createdAt || new Date().toISOString(),
           authProvider: 'firebase',
         };
+
+        // Cache into local storage accounts as well
+        const accountIdx = accounts.findIndex((a) => a.id === fbUser.uid || a.email === email);
+        const storedAcc: StoredAccount = {
+          id: fbUser.uid,
+          email: email,
+          passwordHash: 'firebase_managed',
+          salt: 'firebase_managed',
+          profile: {
+            id: fbUser.uid,
+            name: authUser.name,
+            username: authUser.username,
+            avatar: authUser.avatar,
+            bio: authUser.bio,
+            buddyCode: authUser.buddyCode,
+            levelTitle: authUser.levelTitle,
+            weeklyGoal: authUser.weeklyGoal,
+            createdAt: authUser.createdAt,
+          },
+          createdAt: authUser.createdAt,
+          lastLoginAt: new Date().toISOString(),
+        };
+        if (accountIdx >= 0) {
+          accounts[accountIdx] = storedAcc;
+        } else {
+          accounts.push(storedAcc);
+        }
+        this.saveStoredAccounts(accounts);
 
         this.setSession(authUser);
         return { success: true, user: authUser };
@@ -348,6 +434,23 @@ class AuthService {
           ...updates,
         };
         this.setSession(updatedUser);
+
+        // Async sync to Firestore
+        if (typeof window !== 'undefined') {
+          import('../firebase/config')
+            .then(({ getFirestoreDb }) => {
+              const db = getFirestoreDb();
+              if (db) {
+                import('firebase/firestore').then(({ doc, setDoc }) => {
+                  setDoc(doc(db, 'users', userId), updates, { merge: true }).catch(
+                    (err) => console.warn('Firestore profile sync error:', err)
+                  );
+                });
+              }
+            })
+            .catch(() => {});
+        }
+
         return updatedUser;
       }
     }
