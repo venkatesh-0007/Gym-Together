@@ -70,7 +70,7 @@ export default function HomePage() {
           <span className="text-xs uppercase font-bold tracking-widest text-zinc-400">
             Today
           </span>
-          <span className="text-xs font-semibold text-zinc-400">
+          <span suppressHydrationWarning className="text-xs font-semibold text-zinc-400">
             {new Date().toLocaleDateString(undefined, {
               weekday: 'short',
               month: 'short',
