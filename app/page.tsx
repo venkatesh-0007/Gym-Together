@@ -15,6 +15,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { useWorkout } from '@/lib/context/WorkoutContext';
+import { useAccount } from '@/lib/context/AccountContext';
 import {
   formatDurationHuman,
   formatElapsed,
@@ -28,6 +29,7 @@ import { WorkoutTemplate } from '@/lib/types/workout';
 
 export default function HomePage() {
   const router = useRouter();
+  const { activeProfile } = useAccount();
   const {
     activeWorkout,
     elapsedSeconds,
@@ -50,7 +52,7 @@ export default function HomePage() {
   const handleStartWorkout = async (template?: WorkoutTemplate) => {
     setIsStarting(true);
     try {
-      await startWorkout(template);
+      await startWorkout(template, activeProfile.id);
       router.push('/active');
     } finally {
       setIsStarting(false);

@@ -65,17 +65,21 @@ export default function ProfilePage() {
   const [fbProjectId, setFbProjectId] = useState(existingFb?.projectId || '');
   const [fbAppId, setFbAppId] = useState(existingFb?.appId || '');
 
-  // Stats calculation
-  const completedWorkouts = allWorkouts.filter((w) => w.status === 'completed');
-  const totalSecs = completedWorkouts.reduce((acc, w) => acc + (w.duration || 0), 0);
-  const streak = calculateStreak(allWorkouts);
+  // Stats calculation strictly from authentic user workouts
+  const userWorkouts = allWorkouts.filter(
+    (w) =>
+      w.status === 'completed' &&
+      (w.userId === activeProfile.id || (!w.userId && activeProfile.id === allProfiles[0]?.id))
+  );
+  const totalSecs = userWorkouts.reduce((acc, w) => acc + (w.duration || 0), 0);
+  const streak = calculateStreak(userWorkouts);
 
   // Highest lift weights
   let maxBench = 0;
   let maxSquat = 0;
   let maxDeadlift = 0;
 
-  completedWorkouts.forEach((w) => {
+  userWorkouts.forEach((w) => {
     (w.exercises || []).forEach((ex) => {
       const name = ex.name.toLowerCase();
       (ex.sets || []).forEach((s) => {
@@ -284,7 +288,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="bg-zinc-950/70 border border-zinc-800/70 rounded-2xl p-3">
             <Dumbbell className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
-            <p className="text-lg font-black text-white">{completedWorkouts.length}</p>
+            <p className="text-lg font-black text-white">{userWorkouts.length}</p>
             <p className="text-[10px] text-zinc-500">Workouts</p>
           </div>
 

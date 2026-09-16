@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { StopCircle, Play, ChevronLeft, Timer, Plus } from 'lucide-react';
 import { useWorkout } from '@/lib/context/WorkoutContext';
+import { useAccount } from '@/lib/context/AccountContext';
 import { formatElapsed, formatTime } from '@/lib/calculations/duration';
 import StopWorkoutModal from '@/components/workout/StopWorkoutModal';
 import RestTimer from '@/components/workout/RestTimer';
@@ -12,6 +13,7 @@ import { triggerHaptic } from '@/lib/utils/haptics';
 
 export default function ActiveWorkoutPage() {
   const router = useRouter();
+  const { activeProfile } = useAccount();
   const {
     activeWorkout,
     elapsedSeconds,
@@ -42,7 +44,7 @@ export default function ActiveWorkoutPage() {
         <button
           type="button"
           onClick={async () => {
-            await startWorkout();
+            await startWorkout(undefined, activeProfile.id);
           }}
           className="mt-6 w-full max-w-xs h-14 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-emerald-950 font-black rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all text-base"
         >

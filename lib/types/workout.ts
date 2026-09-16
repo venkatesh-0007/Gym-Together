@@ -24,6 +24,7 @@ export interface WorkoutExercise {
 
 export interface Workout {
   id: string;
+  userId?: string; // Links workout to the active lifter profile
   startTime: string; // ISO string
   endTime: string | null; // ISO string or null if active
   status: WorkoutStatus;

@@ -32,7 +32,7 @@ interface WorkoutContextType {
   templates: WorkoutTemplate[];
   settings: UserSettings;
 
-  startWorkout: (template?: WorkoutTemplate) => Promise<Workout>;
+  startWorkout: (template?: WorkoutTemplate, userId?: string) => Promise<Workout>;
   updateActiveWorkout: (updated: Workout) => Promise<void>;
   saveCompletedWorkout: (details: {
     mood?: Mood;
@@ -189,7 +189,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
 
   // Start new workout
   const startWorkout = useCallback(
-    async (template?: WorkoutTemplate): Promise<Workout> => {
+    async (template?: WorkoutTemplate, userId?: string): Promise<Workout> => {
       // Prevent starting if another workout is already active
       const current = activeWorkoutRef.current;
       if (current && current.status === 'active') {
@@ -199,6 +199,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       const now = new Date();
       const newWorkout: Workout = {
         id: `workout_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        userId,
         startTime: now.toISOString(),
         endTime: null,
         status: 'active',

@@ -4,12 +4,14 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Play, Plus, Trash2, Dumbbell, Sparkles } from 'lucide-react';
 import { useWorkout } from '@/lib/context/WorkoutContext';
+import { useAccount } from '@/lib/context/AccountContext';
 import { WorkoutTemplate } from '@/lib/types/workout';
 import { storage } from '@/lib/storage';
 import { triggerHaptic } from '@/lib/utils/haptics';
 
 export default function TemplatesPage() {
   const router = useRouter();
+  const { activeProfile } = useAccount();
   const { templates, refreshTemplates, startWorkout } = useWorkout();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -23,7 +25,7 @@ export default function TemplatesPage() {
 
   const handleStartTemplate = async (tmpl: WorkoutTemplate) => {
     triggerHaptic('medium');
-    await startWorkout(tmpl);
+    await startWorkout(tmpl, activeProfile.id);
     router.push('/active');
   };
 
