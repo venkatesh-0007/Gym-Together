@@ -16,11 +16,15 @@ import {
   Moon,
   Sun,
   Laptop,
+  Cloud,
+  RefreshCw,
 } from 'lucide-react';
 import { useWorkout } from '@/lib/context/WorkoutContext';
+import { useAccount } from '@/lib/context/AccountContext';
 import { storage } from '@/lib/storage';
 import { triggerHaptic } from '@/lib/utils/haptics';
 import { AccentColor } from '@/lib/types/workout';
+import PWAInstallCard from '@/components/pwa/PWAInstallCard';
 
 const ACCENT_PRESETS: { id: AccentColor; label: string; hex: string; isDefault?: boolean }[] = [
   { id: 'red', label: 'Crimson Red', hex: '#ef4444', isDefault: true },
@@ -32,7 +36,16 @@ const ACCENT_PRESETS: { id: AccentColor; label: string; hex: string; isDefault?:
 ];
 
 export default function SettingsPage() {
-  const { settings, updateSettings, refreshWorkouts, refreshTemplates } = useWorkout();
+  const {
+    settings,
+    updateSettings,
+    refreshWorkouts,
+    refreshTemplates,
+    isSyncingCloud,
+    lastCloudSyncTime,
+    triggerCloudSync,
+  } = useWorkout();
+  const { currentUser } = useAccount();
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
@@ -398,8 +411,59 @@ export default function SettingsPage() {
           </section>
         </div>
 
-        {/* Right Column: Data Management & App Info */}
+        {/* Right Column: PWA, Cloud Sync, Data Management & App Info */}
         <div className="flex flex-col gap-6">
+          {/* PWA INSTALLATION CARD */}
+          <PWAInstallCard />
+
+          {/* CLOUD FIRESTORE SYNCHRONIZATION */}
+          <section className="gym-card p-6 shadow-sm flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-accent-subtle border border-accent-subtle flex items-center justify-center text-accent">
+                  <Cloud className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs uppercase font-bold tracking-wider text-[var(--muted)]">
+                    Cloud Database
+                  </span>
+                  <p className="text-sm font-extrabold text-[var(--foreground)]">Cross-Device Cloud Sync</p>
+                </div>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Connected
+              </span>
+            </div>
+
+            <p className="text-xs text-[var(--muted)] leading-relaxed">
+              {currentUser?.email
+                ? `Syncing workouts and custom routines for ${currentUser.email} with Cloud Firestore (gym-together-182f5).`
+                : 'Log in to automatically back up your workouts, PRs, and custom routines to Firebase Cloud.'}
+            </p>
+
+            <div className="p-3 rounded-xl bg-[var(--card-subtle)] border border-[var(--card-border)] flex items-center justify-between text-xs">
+              <span className="text-[var(--muted)]">Last synced:</span>
+              <span className="font-semibold text-[var(--foreground)]">
+                {lastCloudSyncTime ? new Date(lastCloudSyncTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Ready to sync'}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              disabled={isSyncingCloud || !currentUser?.id}
+              onClick={async () => {
+                triggerHaptic('medium');
+                await triggerCloudSync();
+                triggerHaptic('success');
+              }}
+              className="w-full h-11 bg-accent hover:opacity-95 active:scale-[0.99] disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2 text-xs transition-all shadow-md shadow-accent/20 cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncingCloud ? 'animate-spin' : ''}`} />
+              <span>{isSyncingCloud ? 'Syncing to Cloud...' : 'Sync Cloud Backup Now'}</span>
+            </button>
+          </section>
+
           {/* DATA BACKUP & RESTORE */}
           <section className="gym-card p-6 shadow-sm flex flex-col gap-4">
             <span className="text-xs uppercase font-bold tracking-wider text-[var(--muted)]">

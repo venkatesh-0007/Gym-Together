@@ -19,6 +19,15 @@ export const metadata: Metadata = {
   title: 'Satatam - Gym Workout Tracker & Partner Collab',
   description: 'Fast, native-feeling gym workout timer, duo partner workouts and community rankings',
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -34,6 +43,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased" data-theme="dark" data-accent="red" suppressHydrationWarning>
       <head>
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function() {

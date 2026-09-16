@@ -12,7 +12,7 @@ import { triggerHaptic } from '@/lib/utils/haptics';
 export default function TemplatesPage() {
   const router = useRouter();
   const { activeProfile } = useAccount();
-  const { templates, refreshTemplates, startWorkout } = useWorkout();
+  const { templates, refreshTemplates, startWorkout, saveTemplate, deleteTemplate } = useWorkout();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [templateName, setTemplateName] = useState('');
@@ -54,8 +54,7 @@ export default function TemplatesPage() {
       exercises: validExercises,
     };
 
-    await storage.saveTemplate(newTmpl);
-    await refreshTemplates();
+    await saveTemplate(newTmpl);
 
     setTemplateName('');
     setTemplateDesc('');
@@ -66,8 +65,7 @@ export default function TemplatesPage() {
 
   const handleDeleteTemplate = async (id: string) => {
     triggerHaptic('warning');
-    await storage.deleteTemplate(id);
-    await refreshTemplates();
+    await deleteTemplate(id);
   };
 
   return (

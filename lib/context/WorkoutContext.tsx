@@ -11,6 +11,15 @@ import {
 import { storage } from '../storage';
 import { getLocalDateString } from '../calculations/duration';
 import { triggerHaptic, playSuccessChime } from '../utils/haptics';
+import { useAccount } from './AccountContext';
+import {
+  uploadWorkoutToCloud,
+  deleteWorkoutFromCloud,
+  uploadTemplateToCloud,
+  deleteTemplateFromCloud,
+  performCloudSync,
+  getLastCloudSyncTime,
+} from '../storage/cloudSync';
 
 interface WorkoutSummaryData {
   duration: number;
@@ -31,6 +40,8 @@ interface WorkoutContextType {
   allWorkouts: Workout[];
   templates: WorkoutTemplate[];
   settings: UserSettings;
+  isSyncingCloud: boolean;
+  lastCloudSyncTime: string | null;
 
   startWorkout: (template?: WorkoutTemplate, userId?: string) => Promise<Workout>;
   updateActiveWorkout: (updated: Workout) => Promise<void>;
@@ -50,6 +61,9 @@ interface WorkoutContextType {
   updateSettings: (newSettings: UserSettings) => Promise<void>;
   deleteWorkout: (id: string) => Promise<void>;
   updateWorkout: (workout: Workout) => Promise<void>;
+  saveTemplate: (template: WorkoutTemplate) => Promise<void>;
+  deleteTemplate: (id: string) => Promise<void>;
+  triggerCloudSync: () => Promise<void>;
 }
 
 const WorkoutContext = createContext<WorkoutContextType | undefined>(undefined);
@@ -62,6 +76,10 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   const [allWorkouts, setAllWorkouts] = useState<Workout[]>([]);
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+
+  const { currentUser } = useAccount();
+  const [isSyncingCloud, setIsSyncingCloud] = useState<boolean>(false);
+  const [lastCloudSyncTime, setLastCloudSyncTime] = useState<string | null>(getLastCloudSyncTime());
 
   const activeWorkoutRef = useRef<Workout | null>(null);
   activeWorkoutRef.current = activeWorkout;
@@ -91,6 +109,29 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       console.error('Failed to load templates:', e);
     }
   }, []);
+
+  // Perform two-way sync with Cloud Firestore
+  const triggerCloudSync = useCallback(async () => {
+    if (!currentUser?.id) return;
+    setIsSyncingCloud(true);
+    try {
+      const stats = await performCloudSync(currentUser.id);
+      setLastCloudSyncTime(stats.lastSyncedAt);
+      await refreshWorkouts();
+      await refreshTemplates();
+    } catch (e) {
+      console.warn('Cloud sync error:', e);
+    } finally {
+      setIsSyncingCloud(false);
+    }
+  }, [currentUser?.id, refreshWorkouts, refreshTemplates]);
+
+  // Automatically trigger cloud sync when user logs in or profile changes
+  useEffect(() => {
+    if (currentUser?.id) {
+      triggerCloudSync();
+    }
+  }, [currentUser?.id, triggerCloudSync]);
 
   // Apply theme & accent to DOM immediately and mirror to localStorage
   const applyThemeAndAccent = useCallback((themeMode?: 'dark' | 'light' | 'system', accent?: string) => {
@@ -302,6 +343,13 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       await storage.saveWorkout(completedWorkout);
       await storage.clearActiveWorkout();
 
+      // Cloud backup
+      if (currentUser?.id) {
+        uploadWorkoutToCloud(currentUser.id, completedWorkout).catch((e) =>
+          console.warn('Failed to upload workout to cloud:', e)
+        );
+      }
+
       // If body weight provided, also record to bodyweight log
       if (details.bodyWeight && details.bodyWeight > 0) {
         await storage.saveBodyWeight({
@@ -322,7 +370,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       // Refresh list
       await refreshWorkouts();
     },
-    [refreshWorkouts, settings.weightUnit]
+    [refreshWorkouts, settings.weightUnit, currentUser?.id]
   );
 
   const cancelStopWorkout = useCallback(() => {
@@ -363,18 +411,57 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     async (id: string) => {
       triggerHaptic('warning');
       await storage.deleteWorkout(id);
+      if (currentUser?.id) {
+        deleteWorkoutFromCloud(currentUser.id, id).catch((e) =>
+          console.warn('Failed to delete workout from cloud:', e)
+        );
+      }
       await refreshWorkouts();
     },
-    [refreshWorkouts]
+    [refreshWorkouts, currentUser?.id]
   );
 
   // Update completed workout (notes, mood, etc.)
   const updateWorkout = useCallback(
     async (workout: Workout) => {
       await storage.updateWorkout(workout);
+      if (currentUser?.id) {
+        uploadWorkoutToCloud(currentUser.id, workout).catch((e) =>
+          console.warn('Failed to upload updated workout to cloud:', e)
+        );
+      }
       await refreshWorkouts();
     },
-    [refreshWorkouts]
+    [refreshWorkouts, currentUser?.id]
+  );
+
+  // Save or update custom template
+  const saveTemplate = useCallback(
+    async (template: WorkoutTemplate) => {
+      await storage.saveTemplate(template);
+      if (currentUser?.id) {
+        uploadTemplateToCloud(currentUser.id, template).catch((e) =>
+          console.warn('Failed to upload template to cloud:', e)
+        );
+      }
+      await refreshTemplates();
+    },
+    [refreshTemplates, currentUser?.id]
+  );
+
+  // Delete custom template
+  const deleteTemplate = useCallback(
+    async (id: string) => {
+      triggerHaptic('warning');
+      await storage.deleteTemplate(id);
+      if (currentUser?.id) {
+        deleteTemplateFromCloud(currentUser.id, id).catch((e) =>
+          console.warn('Failed to delete template from cloud:', e)
+        );
+      }
+      await refreshTemplates();
+    },
+    [refreshTemplates, currentUser?.id]
   );
 
   return (
@@ -387,6 +474,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         allWorkouts,
         templates,
         settings,
+        isSyncingCloud,
+        lastCloudSyncTime,
         startWorkout,
         updateActiveWorkout,
         saveCompletedWorkout,
@@ -399,6 +488,9 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         updateSettings,
         deleteWorkout,
         updateWorkout,
+        saveTemplate,
+        deleteTemplate,
+        triggerCloudSync,
       }}
     >
       {children}
