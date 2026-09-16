@@ -142,242 +142,260 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col px-5 py-5 gap-6 animate-in fade-in duration-200">
+    <div className="flex-1 flex flex-col px-4 sm:px-6 py-4 sm:py-6 gap-6 animate-page-enter">
       {/* Top Bar */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-extrabold text-white tracking-tight">
-            Account & Profile
+          <h1 className="text-3xl font-black text-white tracking-tight">
+            Lifter Profile
           </h1>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Manage your personal lifter profile & collaboration
+            Manage your personal identity, gym buddy code, and cloud sync
           </p>
         </div>
 
         <Link
           href="/settings"
-          className="p-2 text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 rounded-xl transition-colors active:scale-95"
+          className="p-2.5 text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 rounded-2xl transition-all hover:border-zinc-700 active:scale-95 shadow-sm"
           title="App Settings"
         >
           <Settings className="w-4 h-4" />
         </Link>
       </div>
 
-      {/* HERO PROFILE CARD */}
-      <div className="w-full bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border border-zinc-800 rounded-3xl p-5 shadow-xl flex flex-col gap-4 relative overflow-hidden">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3.5">
-            <div className="w-16 h-16 rounded-2xl bg-zinc-800 border-2 border-emerald-500/50 flex items-center justify-center text-3xl shadow-lg shadow-emerald-950/40">
-              {activeProfile.avatar}
+      {/* Structured Responsive Grid: 1 col on mobile, 2 cols on tablet/desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+        {/* LEFT COLUMN: HERO PROFILE & RECORDS */}
+        <div className="flex flex-col gap-6">
+          {/* HERO PROFILE CARD */}
+          <div className="w-full bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950 border border-zinc-800 rounded-3xl p-6 shadow-xl flex flex-col gap-5 relative overflow-hidden transition-all hover:border-zinc-700">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-18 h-18 rounded-3xl bg-zinc-800 border-2 border-emerald-500/50 flex items-center justify-center text-4xl shadow-xl shadow-emerald-950/40">
+                  {activeProfile.avatar}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-black text-white tracking-tight">
+                      {activeProfile.name}
+                    </h2>
+                    <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold rounded-full">
+                      {activeProfile.levelTitle}
+                    </span>
+                  </div>
+                  <p className="text-xs text-zinc-400 font-mono mt-0.5">
+                    {activeProfile.username}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setNameInput(activeProfile.name);
+                  setUsernameInput(activeProfile.username);
+                  setAvatarInput(activeProfile.avatar);
+                  setBioInput(activeProfile.bio);
+                  setIsEditOpen(true);
+                }}
+                className="p-2 text-zinc-400 hover:text-white bg-zinc-800/80 rounded-xl border border-zinc-700/60 transition-all hover:scale-105 active:scale-95"
+                title="Edit profile"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h2 className="text-lg font-black text-white tracking-tight">
-                  {activeProfile.name}
-                </h2>
-                <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold rounded-full">
-                  {activeProfile.levelTitle}
+
+            {activeProfile.bio ? (
+              <p className="text-xs text-zinc-300 bg-zinc-950/60 p-3 rounded-2xl border border-zinc-800/60 leading-relaxed">
+                {activeProfile.bio}
+              </p>
+            ) : (
+              <p className="text-xs text-zinc-500 italic">No bio set. Tap edit above to add your fitness goals.</p>
+            )}
+
+            {/* GYM BUDDY CODE */}
+            <div className="flex items-center justify-between bg-zinc-950 border border-zinc-800/80 px-4 py-3 rounded-2xl">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">
+                  Gym Buddy Code
+                </span>
+                <p className="text-base font-black font-mono text-emerald-400 tracking-wider">
+                  {activeProfile.buddyCode}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleCopyBuddyCode}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 text-xs font-semibold rounded-xl transition-all active:scale-95 hover:border-emerald-500/40"
+              >
+                {copiedCode ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-emerald-400 font-bold">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>Share Code</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* LIFTER STATS SUMMARY */}
+          <section className="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-6 shadow-sm flex flex-col gap-4 hover:border-zinc-700 transition-all">
+            <span className="text-xs uppercase font-extrabold tracking-wider text-zinc-400">
+              Career Records
+            </span>
+
+            <div className="grid grid-cols-3 gap-2.5 text-center">
+              <div className="bg-zinc-950/70 border border-zinc-800/70 rounded-2xl p-3.5">
+                <Dumbbell className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+                <p className="text-xl font-black text-white">{userWorkouts.length}</p>
+                <p className="text-[10px] text-zinc-500">Workouts</p>
+              </div>
+
+              <div className="bg-zinc-950/70 border border-zinc-800/70 rounded-2xl p-3.5">
+                <Clock className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
+                <p className="text-xl font-black text-white">
+                  {formatDurationHuman(totalSecs)}
+                </p>
+                <p className="text-[10px] text-zinc-500">Gym Time</p>
+              </div>
+
+              <div className="bg-zinc-950/70 border border-zinc-800/70 rounded-2xl p-3.5">
+                <Flame className="w-4 h-4 text-amber-500 mx-auto mb-1" />
+                <p className="text-xl font-black text-white">{streak.currentStreak}d</p>
+                <p className="text-[10px] text-zinc-500">Streak</p>
+              </div>
+            </div>
+
+            {/* Big 3 PRs */}
+            <div className="flex flex-col gap-2 pt-2 border-t border-zinc-800/60">
+              <span className="text-xs font-semibold text-zinc-400 flex items-center gap-1.5">
+                <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                Heavy Lifts (Personal Records)
+              </span>
+
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-2.5">
+                  <span className="text-[10px] text-zinc-500">Bench Press</span>
+                  <p className="text-sm font-bold text-emerald-400 mt-0.5">
+                    {maxBench > 0 ? `${maxBench} ${settings.weightUnit}` : '--'}
+                  </p>
+                </div>
+                <div className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-2.5">
+                  <span className="text-[10px] text-zinc-500">Squat</span>
+                  <p className="text-sm font-bold text-emerald-400 mt-0.5">
+                    {maxSquat > 0 ? `${maxSquat} ${settings.weightUnit}` : '--'}
+                  </p>
+                </div>
+                <div className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-2.5">
+                  <span className="text-[10px] text-zinc-500">Deadlift</span>
+                  <p className="text-sm font-bold text-emerald-400 mt-0.5">
+                    {maxDeadlift > 0 ? `${maxDeadlift} ${settings.weightUnit}` : '--'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* RIGHT COLUMN: MULTI-PERSON PROFILES & CLOUD SYNC */}
+        <div className="flex flex-col gap-6">
+          {/* MULTI-PERSON PROFILE SWITCHER */}
+          <section className="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-6 shadow-sm flex flex-col gap-4 hover:border-zinc-700 transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase font-extrabold tracking-wider text-zinc-400">
+                Lifter Profiles ({allProfiles.length})
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsCreateOpen(true)}
+                className="text-xs font-bold text-emerald-400 hover:underline flex items-center gap-1 transition-all"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Person</span>
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              {allProfiles.map((p) => {
+                const isCurrent = p.id === activeProfile.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => switchProfile(p.id)}
+                    className={`p-3.5 rounded-2xl border text-left transition-all active:scale-98 flex items-center justify-between ${
+                      isCurrent
+                        ? 'bg-emerald-950/40 border-emerald-500 text-white shadow-sm'
+                        : 'bg-zinc-950/60 border-zinc-850 text-zinc-300 hover:border-zinc-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{p.avatar}</span>
+                      <div className="truncate">
+                        <p className="text-xs font-bold truncate">{p.name}</p>
+                        <p className="text-[10px] text-zinc-500 truncate">{p.levelTitle}</p>
+                      </div>
+                    </div>
+                    {isCurrent && (
+                      <span className="px-2 py-0.5 bg-emerald-500 text-emerald-950 rounded-lg text-[10px] font-bold">
+                        Active
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* REAL-TIME DATABASE STATUS & CLOUD SYNC */}
+          <section className="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-6 shadow-sm flex flex-col gap-3.5 hover:border-zinc-700 transition-all">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs uppercase font-extrabold tracking-wider text-zinc-400">
+                  Real-Time Database
                 </span>
               </div>
-              <p className="text-xs text-zinc-400 font-mono mt-0.5">
-                {activeProfile.username}
-              </p>
-            </div>
-          </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              setNameInput(activeProfile.name);
-              setUsernameInput(activeProfile.username);
-              setAvatarInput(activeProfile.avatar);
-              setBioInput(activeProfile.bio);
-              setIsEditOpen(true);
-            }}
-            className="p-2 text-zinc-400 hover:text-white bg-zinc-800/80 rounded-xl border border-zinc-700/60 transition-colors active:scale-95"
-            title="Edit profile"
-          >
-            <Edit2 className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {activeProfile.bio && (
-          <p className="text-xs text-zinc-300 bg-zinc-950/60 p-2.5 rounded-xl border border-zinc-800/60">
-            {activeProfile.bio}
-          </p>
-        )}
-
-        {/* GYM BUDDY CODE */}
-        <div className="flex items-center justify-between bg-zinc-950 border border-zinc-800/80 px-3.5 py-2.5 rounded-2xl">
-          <div>
-            <span className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">
-              Gym Buddy Code
-            </span>
-            <p className="text-sm font-black font-mono text-emerald-400 tracking-wider">
-              {activeProfile.buddyCode}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleCopyBuddyCode}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 text-xs font-semibold rounded-xl transition-all active:scale-95"
-          >
-            {copiedCode ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-emerald-400">Copied</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5 text-zinc-400" />
-                <span>Share Code</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* MULTI-PERSON PROFILE SWITCHER */}
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs uppercase font-bold tracking-wider text-zinc-400">
-            Switch Lifter Profile ({allProfiles.length})
-          </span>
-          <button
-            type="button"
-            onClick={() => setIsCreateOpen(true)}
-            className="text-xs font-bold text-emerald-400 hover:underline flex items-center gap-1"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add Person</span>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2.5">
-          {allProfiles.map((p) => {
-            const isCurrent = p.id === activeProfile.id;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => switchProfile(p.id)}
-                className={`p-3 rounded-2xl border text-left transition-all active:scale-95 flex items-center gap-2.5 ${
-                  isCurrent
-                    ? 'bg-emerald-950/40 border-emerald-500 text-white shadow-sm'
-                    : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-300 hover:border-zinc-700'
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  existingFb
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                    : 'bg-zinc-800 text-zinc-400'
                 }`}
               >
-                <span className="text-2xl">{p.avatar}</span>
-                <div className="truncate">
-                  <p className="text-xs font-bold truncate">{p.name}</p>
-                  <p className="text-[10px] text-zinc-500 truncate">{p.levelTitle}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </section>
+                {existingFb ? 'Firebase Connected' : 'Local Mesh (Zero-Config)'}
+              </span>
+            </div>
 
-      {/* LIFTER STATS SUMMARY */}
-      <section className="bg-zinc-900/70 border border-zinc-800/80 rounded-3xl p-5 shadow-sm flex flex-col gap-4">
-        <span className="text-xs uppercase font-bold tracking-wider text-zinc-400">
-          Career Records
-        </span>
-
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="bg-zinc-950/70 border border-zinc-800/70 rounded-2xl p-3">
-            <Dumbbell className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
-            <p className="text-lg font-black text-white">{userWorkouts.length}</p>
-            <p className="text-[10px] text-zinc-500">Workouts</p>
-          </div>
-
-          <div className="bg-zinc-950/70 border border-zinc-800/70 rounded-2xl p-3">
-            <Clock className="w-4 h-4 text-emerald-400 mx-auto mb-1" />
-            <p className="text-lg font-black text-white">
-              {formatDurationHuman(totalSecs)}
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              {existingFb
+                ? 'Connected to Firebase Firestore for cloud real-time duo rooms and live rankings.'
+                : 'Zero-config real-time mesh is active. Duo collab and live rankings sync across multiple browser tabs and windows automatically!'}
             </p>
-            <p className="text-[10px] text-zinc-500">Gym Time</p>
-          </div>
 
-          <div className="bg-zinc-950/70 border border-zinc-800/70 rounded-2xl p-3">
-            <Flame className="w-4 h-4 text-amber-500 mx-auto mb-1" />
-            <p className="text-lg font-black text-white">{streak.currentStreak}d</p>
-            <p className="text-[10px] text-zinc-500">Streak</p>
-          </div>
+            <button
+              type="button"
+              onClick={() => setIsFirebaseOpen(true)}
+              className="w-full h-12 bg-zinc-800 hover:bg-zinc-700 active:scale-[0.99] border border-zinc-700 text-zinc-200 text-xs font-bold rounded-2xl flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5"
+            >
+              <Database className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{existingFb ? 'Configure Firebase Keys' : 'Connect Firebase Cloud Database'}</span>
+            </button>
+          </section>
         </div>
-
-        {/* Big 3 PRs */}
-        <div className="flex flex-col gap-2 pt-2 border-t border-zinc-800/60">
-          <span className="text-xs font-semibold text-zinc-400 flex items-center gap-1.5">
-            <Trophy className="w-3.5 h-3.5 text-amber-400" />
-            Personal PRs (Heavy Lifts)
-          </span>
-
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-2">
-              <span className="text-[10px] text-zinc-500">Bench</span>
-              <p className="text-sm font-bold text-emerald-400">
-                {maxBench > 0 ? `${maxBench} ${settings.weightUnit}` : '--'}
-              </p>
-            </div>
-            <div className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-2">
-              <span className="text-[10px] text-zinc-500">Squat</span>
-              <p className="text-sm font-bold text-emerald-400">
-                {maxSquat > 0 ? `${maxSquat} ${settings.weightUnit}` : '--'}
-              </p>
-            </div>
-            <div className="bg-zinc-950 border border-zinc-800/80 rounded-xl p-2">
-              <span className="text-[10px] text-zinc-500">Deadlift</span>
-              <p className="text-sm font-bold text-emerald-400">
-                {maxDeadlift > 0 ? `${maxDeadlift} ${settings.weightUnit}` : '--'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* REAL-TIME DATABASE STATUS & CLOUD SYNC */}
-      <section className="bg-zinc-900/70 border border-zinc-800/80 rounded-3xl p-5 shadow-sm flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Database className="w-4 h-4 text-emerald-400" />
-            <span className="text-xs uppercase font-bold tracking-wider text-zinc-400">
-              Real-Time Sync Engine
-            </span>
-          </div>
-
-          <span
-            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-              existingFb
-                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                : 'bg-zinc-800 text-zinc-400'
-            }`}
-          >
-            {existingFb ? 'Firebase Connected' : 'Local Peer Mesh (Active)'}
-          </span>
-        </div>
-
-        <p className="text-xs text-zinc-400">
-          {existingFb
-            ? 'Connected to Firebase Firestore for cloud real-time duo rooms and live rankings.'
-            : 'Zero-config local real-time mesh is active! You can test Duo collab and live rankings across multiple browser tabs or windows immediately.'}
-        </p>
-
-        <button
-          type="button"
-          onClick={() => setIsFirebaseOpen(true)}
-          className="w-full h-11 bg-zinc-800 hover:bg-zinc-700 active:scale-[0.99] border border-zinc-700 text-zinc-200 text-xs font-bold rounded-2xl flex items-center justify-center gap-2 transition-colors mt-1"
-        >
-          <Database className="w-3.5 h-3.5 text-emerald-400" />
-          <span>{existingFb ? 'Configure Firebase Keys' : 'Connect Firebase Cloud Database'}</span>
-        </button>
-      </section>
+      </div>
 
       {/* EDIT PROFILE MODAL */}
       {isEditOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4">
+          <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
             <h3 className="text-base font-bold text-white text-center">
               Edit Lifter Profile
             </h3>
@@ -456,7 +474,7 @@ export default function ProfilePage() {
       {/* CREATE NEW PERSON MODAL */}
       {isCreateOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4">
+          <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
             <h3 className="text-base font-bold text-white text-center">
               Add New Person / Lifter
             </h3>
@@ -538,7 +556,7 @@ export default function ProfilePage() {
       {/* FIREBASE CONFIG MODAL */}
       {isFirebaseOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4">
+          <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
             <h3 className="text-base font-bold text-white text-center">
               Firebase Cloud Setup
             </h3>

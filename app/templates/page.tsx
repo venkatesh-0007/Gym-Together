@@ -71,90 +71,95 @@ export default function TemplatesPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col px-5 py-5 gap-6 animate-in fade-in duration-200">
+    <div className="flex-1 flex flex-col px-4 sm:px-6 py-6 gap-6 max-w-5xl mx-auto w-full animate-page-enter">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl font-black text-white tracking-tight">
             Workout Routines
           </h1>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Quick-start routines with predefined exercises
+            Quick-start routines with predefined exercises and target sets
           </p>
         </div>
 
         <button
           type="button"
           onClick={() => setIsCreateOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold rounded-xl transition-all active:scale-95"
+          className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20 text-xs font-bold rounded-xl transition-all active:scale-95 shadow-sm shadow-emerald-500/10"
         >
-          <Plus className="w-3.5 h-3.5" />
-          <span>New</span>
+          <Plus className="w-4 h-4" />
+          <span>New Routine</span>
         </button>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {templates.map((tmpl) => (
           <div
             key={tmpl.id}
-            className="bg-zinc-900/80 border border-zinc-800/80 rounded-3xl p-5 shadow-sm flex flex-col gap-3"
+            className="gym-card p-5 shadow-sm flex flex-col justify-between gap-4 transition-all duration-300 hover:border-zinc-750 hover:shadow-xl hover:shadow-emerald-950/20 group"
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-extrabold text-base text-white">{tmpl.name}</h3>
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-extrabold text-base text-white group-hover:text-emerald-300 transition-colors">
+                      {tmpl.name}
+                    </h3>
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                  </div>
+                  {tmpl.description && (
+                    <p className="text-xs text-zinc-400 mt-0.5 leading-snug">{tmpl.description}</p>
+                  )}
                 </div>
-                {tmpl.description && (
-                  <p className="text-xs text-zinc-400 mt-0.5">{tmpl.description}</p>
+
+                {/* Delete custom templates */}
+                {!['push-day', 'pull-day', 'leg-day', 'full-body'].includes(tmpl.id) && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteTemplate(tmpl.id)}
+                    className="p-1.5 text-zinc-600 hover:text-rose-400 rounded-lg hover:bg-zinc-800 transition-colors"
+                    title="Delete routine"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 )}
               </div>
 
-              {/* Delete custom templates */}
-              {!['push-day', 'pull-day', 'leg-day', 'full-body'].includes(tmpl.id) && (
-                <button
-                  type="button"
-                  onClick={() => handleDeleteTemplate(tmpl.id)}
-                  className="p-1.5 text-zinc-600 hover:text-rose-400 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Muscle Group tags */}
-            <div className="flex flex-wrap gap-1.5">
-              {tmpl.muscleGroups.map((mg) => (
-                <span
-                  key={mg}
-                  className="px-2 py-0.5 bg-zinc-800/80 border border-zinc-700/60 rounded-lg text-[10px] font-semibold text-zinc-300"
-                >
-                  {mg}
-                </span>
-              ))}
-            </div>
-
-            {/* Exercises List Preview */}
-            <div className="bg-zinc-950/60 border border-zinc-800/60 rounded-2xl p-3 flex flex-col divide-y divide-zinc-800/50">
-              {tmpl.exercises.map((ex, idx) => (
-                <div
-                  key={idx}
-                  className="py-1.5 flex items-center justify-between text-xs first:pt-0 last:pb-0"
-                >
-                  <span className="text-zinc-300 font-medium">{ex.name}</span>
-                  <span className="text-zinc-500 font-mono text-[11px]">
-                    {ex.defaultSets} sets
+              {/* Muscle Group tags */}
+              <div className="flex flex-wrap gap-1.5">
+                {tmpl.muscleGroups.map((mg) => (
+                  <span
+                    key={mg}
+                    className="px-2.5 py-0.5 bg-zinc-900 border border-zinc-800 rounded-lg text-[10px] font-semibold text-zinc-300"
+                  >
+                    {mg}
                   </span>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {/* Exercises List Preview */}
+              <div className="bg-zinc-950/70 border border-zinc-850 rounded-2xl p-3 flex flex-col divide-y divide-zinc-850">
+                {tmpl.exercises.map((ex, idx) => (
+                  <div
+                    key={idx}
+                    className="py-1.5 flex items-center justify-between text-xs first:pt-0 last:pb-0"
+                  >
+                    <span className="text-zinc-300 font-medium truncate pr-2">{ex.name}</span>
+                    <span className="text-zinc-500 font-mono text-[11px] flex-shrink-0">
+                      {ex.defaultSets} sets
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Launch Button */}
             <button
               type="button"
               onClick={() => handleStartTemplate(tmpl)}
-              className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-emerald-950 font-bold rounded-2xl flex items-center justify-center gap-2 text-sm shadow-md shadow-emerald-500/15 transition-all mt-1"
+              className="w-full h-11 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-emerald-950 font-extrabold rounded-xl flex items-center justify-center gap-2 text-xs shadow-md shadow-emerald-500/20 transition-all"
             >
-              <Play className="w-4 h-4 fill-current" />
+              <Play className="w-3.5 h-3.5 fill-current" />
               <span>Start Routine</span>
             </button>
           </div>

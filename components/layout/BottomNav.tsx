@@ -48,7 +48,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 flex flex-col items-center pointer-events-none">
+    <div className="fixed bottom-0 left-0 right-0 z-40 flex flex-col items-center pointer-events-none md:hidden">
       {/* Floating active workout banner when navigating away from /active */}
       {activeWorkout && !isActiveScreen && (
         <div className="w-full max-w-md px-4 mb-2 pointer-events-auto animate-in slide-in-from-bottom-2 duration-200">

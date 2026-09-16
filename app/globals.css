@@ -50,10 +50,10 @@ body {
   padding-top: max(env(safe-area-inset-top, 16px), 16px);
 }
 
-/* Custom scrollbars for clean mobile feel */
+/* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -62,16 +62,22 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: #27272a;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
-/* Pulsing aura for active workout timer */
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+/* Structured Keyframe Animations */
 @keyframes pulse-glow {
   0%, 100% {
     box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.25);
+    border-color: rgba(16, 185, 129, 0.4);
   }
   50% {
-    box-shadow: 0 0 45px 0px rgba(16, 185, 129, 0.45);
+    box-shadow: 0 0 50px 2px rgba(16, 185, 129, 0.5);
+    border-color: rgba(16, 185, 129, 0.7);
   }
 }
 
@@ -79,10 +85,63 @@ body {
   animation: pulse-glow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Glass card styling */
-.glass-panel {
-  background: rgba(18, 18, 22, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+@keyframes float-subtle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float {
+  animation: float-subtle 4s ease-in-out infinite;
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-enter {
+  animation: page-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Reusable Structured Card styling with hover transitions */
+.gym-card {
+  background: rgba(18, 18, 22, 0.85);
+  border: 1px solid rgba(39, 39, 42, 0.8);
+  border-radius: 1.5rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gym-card:hover {
+  border-color: rgba(63, 63, 70, 0.9);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+}
+
+/* Interactive primary button */
+.gym-btn-primary {
+  background-color: #10b981;
+  color: #022c22;
+  font-weight: 800;
+  border-radius: 1rem;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3);
+}
+
+.gym-btn-primary:hover {
+  background-color: #34d399;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 25px -5px rgba(16, 185, 129, 0.4);
+}
+
+.gym-btn-primary:active {
+  transform: scale(0.98);
 }
