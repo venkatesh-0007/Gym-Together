@@ -77,7 +77,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   const [templates, setTemplates] = useState<WorkoutTemplate[]>([]);
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
 
-  const { currentUser } = useAccount();
+  const { currentUser, activeProfile } = useAccount();
+  const activeUserId = currentUser?.id || activeProfile?.id;
   const [isSyncingCloud, setIsSyncingCloud] = useState<boolean>(false);
   const [lastCloudSyncTime, setLastCloudSyncTime] = useState<string | null>(getLastCloudSyncTime());
 
@@ -91,34 +92,37 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     return Math.max(0, Math.floor((nowMs - startMs) / 1000));
   }, []);
 
-  // Refresh lists
-  const refreshWorkouts = useCallback(async () => {
+  // Refresh lists with strict user-scoping
+  const refreshWorkouts = useCallback(async (targetUserId?: string) => {
     try {
-      const list = await storage.getWorkouts();
+      const uId = targetUserId || currentUser?.id || activeProfile?.id;
+      const list = await storage.getWorkouts(uId);
       setAllWorkouts(list);
     } catch (e) {
       console.error('Failed to load workouts:', e);
     }
-  }, []);
+  }, [currentUser?.id, activeProfile?.id]);
 
-  const refreshTemplates = useCallback(async () => {
+  const refreshTemplates = useCallback(async (targetUserId?: string) => {
     try {
-      const list = await storage.getTemplates();
+      const uId = targetUserId || currentUser?.id || activeProfile?.id;
+      const list = await storage.getTemplates(uId);
       setTemplates(list);
     } catch (e) {
       console.error('Failed to load templates:', e);
     }
-  }, []);
+  }, [currentUser?.id, activeProfile?.id]);
 
   // Perform two-way sync with Cloud Firestore
   const triggerCloudSync = useCallback(async () => {
-    if (!currentUser?.id) return;
+    const uId = currentUser?.id;
+    if (!uId) return;
     setIsSyncingCloud(true);
     try {
-      const stats = await performCloudSync(currentUser.id);
+      const stats = await performCloudSync(uId);
       setLastCloudSyncTime(stats.lastSyncedAt);
-      await refreshWorkouts();
-      await refreshTemplates();
+      await refreshWorkouts(uId);
+      await refreshTemplates(uId);
     } catch (e) {
       console.warn('Cloud sync error:', e);
     } finally {
@@ -126,12 +130,30 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentUser?.id, refreshWorkouts, refreshTemplates]);
 
-  // Automatically trigger cloud sync when user logs in or profile changes
+  // When active account changes (log in, switch profile, or log out), immediately isolate data
   useEffect(() => {
-    if (currentUser?.id) {
-      triggerCloudSync();
+    const uId = currentUser?.id || activeProfile?.id;
+    if (uId) {
+      refreshWorkouts(uId);
+      refreshTemplates(uId);
+
+      // Verify active workout belongs to this user
+      storage.getActiveWorkout(uId).then((savedActive) => {
+        if (savedActive && savedActive.status === 'active' && (!savedActive.userId || savedActive.userId === uId)) {
+          setActiveWorkout(savedActive);
+          setElapsedSeconds(calculateElapsed(savedActive.startTime));
+        } else {
+          setActiveWorkout(null);
+          setElapsedSeconds(0);
+          setRecoveryData(null);
+        }
+      });
+
+      if (currentUser?.id) {
+        triggerCloudSync();
+      }
     }
-  }, [currentUser?.id, triggerCloudSync]);
+  }, [currentUser?.id, activeProfile?.id, refreshWorkouts, refreshTemplates, calculateElapsed, triggerCloudSync]);
 
   // Apply theme & accent to DOM immediately and mirror to localStorage
   const applyThemeAndAccent = useCallback((themeMode?: 'dark' | 'light' | 'system', accent?: string) => {
@@ -179,11 +201,12 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     async function init() {
       try {
         setIsLoading(true);
+        const uId = currentUser?.id || activeProfile?.id;
         const [savedActive, workoutsList, templatesList, loadedSettings] =
           await Promise.all([
-            storage.getActiveWorkout(),
-            storage.getWorkouts(),
-            storage.getTemplates(),
+            storage.getActiveWorkout(uId),
+            storage.getWorkouts(uId),
+            storage.getTemplates(uId),
             storage.getSettings(),
           ]);
 
@@ -192,7 +215,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         setSettings(loadedSettings);
         applyThemeAndAccent(loadedSettings.theme, loadedSettings.accentColor);
 
-        if (savedActive && savedActive.status === 'active') {
+        if (savedActive && savedActive.status === 'active' && (!savedActive.userId || savedActive.userId === uId)) {
           const now = Date.now();
           const startMs = new Date(savedActive.startTime).getTime();
           const hoursAgo = (now - startMs) / (1000 * 60 * 60);
@@ -217,7 +240,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     }
 
     init();
-  }, [calculateElapsed]);
+  }, [calculateElapsed, currentUser?.id, activeProfile?.id, applyThemeAndAccent]);
 
   // Live timer interval: recalibrates strictly using timestamp
   useEffect(() => {
@@ -255,16 +278,17 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   // Start new workout
   const startWorkout = useCallback(
     async (template?: WorkoutTemplate, userId?: string): Promise<Workout> => {
-      // Prevent starting if another workout is already active
+      const uId = userId || currentUser?.id || activeProfile?.id;
+      // Prevent starting if another workout is already active for this user
       const current = activeWorkoutRef.current;
-      if (current && current.status === 'active') {
+      if (current && current.status === 'active' && (!current.userId || current.userId === uId)) {
         return current;
       }
 
       const now = new Date();
       const newWorkout: Workout = {
         id: `workout_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-        userId,
+        userId: uId,
         startTime: now.toISOString(),
         endTime: null,
         status: 'active',
@@ -304,7 +328,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
 
       return newWorkout;
     },
-    []
+    [currentUser?.id, activeProfile?.id]
   );
 
   // Update in-progress workout (exercises, notes, sets)
@@ -328,9 +352,11 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       const startMs = new Date(current.startTime).getTime();
       const endMs = new Date(finishTime).getTime();
       const durationSeconds = Math.max(0, Math.floor((endMs - startMs) / 1000));
+      const uId = current.userId || currentUser?.id || activeProfile?.id;
 
       const completedWorkout: Workout = {
         ...current,
+        userId: uId,
         endTime: finishTime,
         status: 'completed',
         duration: durationSeconds,
@@ -344,8 +370,8 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       await storage.clearActiveWorkout();
 
       // Cloud backup
-      if (currentUser?.id) {
-        uploadWorkoutToCloud(currentUser.id, completedWorkout).catch((e) =>
+      if (uId) {
+        uploadWorkoutToCloud(uId, completedWorkout).catch((e) =>
           console.warn('Failed to upload workout to cloud:', e)
         );
       }
@@ -368,9 +394,9 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       setRecoveryData(null);
 
       // Refresh list
-      await refreshWorkouts();
+      await refreshWorkouts(uId);
     },
-    [refreshWorkouts, settings.weightUnit, currentUser?.id]
+    [refreshWorkouts, settings.weightUnit, currentUser?.id, activeProfile?.id]
   );
 
   const cancelStopWorkout = useCallback(() => {
@@ -411,42 +437,49 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     async (id: string) => {
       triggerHaptic('warning');
       await storage.deleteWorkout(id);
-      if (currentUser?.id) {
-        deleteWorkoutFromCloud(currentUser.id, id).catch((e) =>
+      const uId = currentUser?.id || activeProfile?.id;
+      if (uId) {
+        deleteWorkoutFromCloud(uId, id).catch((e) =>
           console.warn('Failed to delete workout from cloud:', e)
         );
       }
-      await refreshWorkouts();
+      await refreshWorkouts(uId);
     },
-    [refreshWorkouts, currentUser?.id]
+    [refreshWorkouts, currentUser?.id, activeProfile?.id]
   );
 
   // Update completed workout (notes, mood, etc.)
   const updateWorkout = useCallback(
     async (workout: Workout) => {
       await storage.updateWorkout(workout);
-      if (currentUser?.id) {
-        uploadWorkoutToCloud(currentUser.id, workout).catch((e) =>
+      const uId = workout.userId || currentUser?.id || activeProfile?.id;
+      if (uId) {
+        uploadWorkoutToCloud(uId, workout).catch((e) =>
           console.warn('Failed to upload updated workout to cloud:', e)
         );
       }
-      await refreshWorkouts();
+      await refreshWorkouts(uId);
     },
-    [refreshWorkouts, currentUser?.id]
+    [refreshWorkouts, currentUser?.id, activeProfile?.id]
   );
 
   // Save or update custom template
   const saveTemplate = useCallback(
     async (template: WorkoutTemplate) => {
-      await storage.saveTemplate(template);
-      if (currentUser?.id) {
-        uploadTemplateToCloud(currentUser.id, template).catch((e) =>
+      const uId = (template as any).userId || currentUser?.id || activeProfile?.id;
+      const templWithUser: WorkoutTemplate = {
+        ...template,
+        userId: uId,
+      } as any;
+      await storage.saveTemplate(templWithUser);
+      if (uId) {
+        uploadTemplateToCloud(uId, templWithUser).catch((e) =>
           console.warn('Failed to upload template to cloud:', e)
         );
       }
-      await refreshTemplates();
+      await refreshTemplates(uId);
     },
-    [refreshTemplates, currentUser?.id]
+    [refreshTemplates, currentUser?.id, activeProfile?.id]
   );
 
   // Delete custom template
@@ -454,14 +487,15 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     async (id: string) => {
       triggerHaptic('warning');
       await storage.deleteTemplate(id);
-      if (currentUser?.id) {
-        deleteTemplateFromCloud(currentUser.id, id).catch((e) =>
+      const uId = currentUser?.id || activeProfile?.id;
+      if (uId) {
+        deleteTemplateFromCloud(uId, id).catch((e) =>
           console.warn('Failed to delete template from cloud:', e)
         );
       }
-      await refreshTemplates();
+      await refreshTemplates(uId);
     },
-    [refreshTemplates, currentUser?.id]
+    [refreshTemplates, currentUser?.id, activeProfile?.id]
   );
 
   return (

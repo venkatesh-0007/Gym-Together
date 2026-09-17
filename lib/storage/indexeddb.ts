@@ -153,11 +153,15 @@ class IndexedDBStorageAdapter implements StorageAdapter {
   }
 
   // Active Workout
-  async getActiveWorkout(): Promise<Workout | null> {
+  async getActiveWorkout(userId?: string): Promise<Workout | null> {
     try {
       const db = await this.getDB();
       const active = await db.get('active_workout', 'current');
-      return active || null;
+      if (!active) return null;
+      if (userId && active.userId && active.userId !== userId) {
+        return null;
+      }
+      return active;
     } catch (e) {
       console.error('Error fetching active workout from IndexedDB:', e);
       return null;
@@ -175,12 +179,17 @@ class IndexedDBStorageAdapter implements StorageAdapter {
   }
 
   // Completed Workouts
-  async getWorkouts(): Promise<Workout[]> {
+  async getWorkouts(userId?: string): Promise<Workout[]> {
     try {
       const db = await this.getDB();
       const workouts = await db.getAll('workouts');
+      
+      const filtered = userId
+        ? workouts.filter((w) => w.userId === userId)
+        : workouts;
+
       // Sort newest first
-      return workouts.sort(
+      return filtered.sort(
         (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
       );
     } catch (e) {
@@ -211,11 +220,15 @@ class IndexedDBStorageAdapter implements StorageAdapter {
   }
 
   // Templates
-  async getTemplates(): Promise<WorkoutTemplate[]> {
+  async getTemplates(userId?: string): Promise<WorkoutTemplate[]> {
     try {
       const db = await this.getDB();
       const templates = await db.getAll('templates');
-      return templates.length > 0 ? templates : DEFAULT_TEMPLATES;
+      const allTmpl = templates.length > 0 ? templates : DEFAULT_TEMPLATES;
+      if (userId) {
+        return allTmpl.filter((t: any) => !t.userId || t.userId === userId);
+      }
+      return allTmpl;
     } catch (e) {
       console.error('Error getting templates:', e);
       return DEFAULT_TEMPLATES;

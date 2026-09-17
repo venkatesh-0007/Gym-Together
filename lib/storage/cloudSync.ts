@@ -121,7 +121,7 @@ export async function performCloudSync(userId: string): Promise<SyncStats> {
       }
     });
 
-    const localWorkouts = await indexedDBStorage.getWorkouts();
+    const localWorkouts = await indexedDBStorage.getWorkouts(userId);
     const localWorkoutMap = new Map<string, Workout>(localWorkouts.map((w) => [w.id, w]));
     const cloudWorkoutMap = new Map<string, Workout>(cloudWorkouts.map((w) => [w.id, w]));
 
@@ -129,15 +129,22 @@ export async function performCloudSync(userId: string): Promise<SyncStats> {
 
     // Pull from cloud to local if missing locally
     for (const remoteWorkout of cloudWorkouts) {
+      const ensuredWorkout: Workout = {
+        ...remoteWorkout,
+        userId: userId,
+      };
       if (!localWorkoutMap.has(remoteWorkout.id)) {
-        await indexedDBStorage.saveWorkout(remoteWorkout);
+        await indexedDBStorage.saveWorkout(ensuredWorkout);
         workoutsSyncedCount++;
       }
     }
 
     // Push from local to cloud if missing in cloud
     for (const localWorkout of localWorkouts) {
-      // Only sync workouts that belong to this user or are untagged
+      // STRICT FILTER: Only sync workouts that belong to this user
+      if (localWorkout.userId !== userId) {
+        continue;
+      }
       if (!cloudWorkoutMap.has(localWorkout.id)) {
         await uploadWorkoutToCloud(userId, localWorkout);
         workoutsSyncedCount++;
@@ -156,7 +163,7 @@ export async function performCloudSync(userId: string): Promise<SyncStats> {
       }
     });
 
-    const localTemplates = await indexedDBStorage.getTemplates();
+    const localTemplates = await indexedDBStorage.getTemplates(userId);
     const localTemplateMap = new Map<string, WorkoutTemplate>(localTemplates.map((t) => [t.id, t]));
     const cloudTemplateMap = new Map<string, WorkoutTemplate>(cloudTemplates.map((t) => [t.id, t]));
 
@@ -164,14 +171,21 @@ export async function performCloudSync(userId: string): Promise<SyncStats> {
 
     // Pull cloud templates to local
     for (const remoteTemplate of cloudTemplates) {
+      const ensuredTemplate: WorkoutTemplate = {
+        ...remoteTemplate,
+        userId: userId,
+      } as any;
       if (!localTemplateMap.has(remoteTemplate.id)) {
-        await indexedDBStorage.saveTemplate(remoteTemplate);
+        await indexedDBStorage.saveTemplate(ensuredTemplate);
         templatesSyncedCount++;
       }
     }
 
-    // Push local custom templates (non-default ones or modified) to cloud
+    // Push local custom templates created by this user to cloud
     for (const localTemplate of localTemplates) {
+      if ((localTemplate as any).userId !== userId) {
+        continue;
+      }
       if (!cloudTemplateMap.has(localTemplate.id)) {
         await uploadTemplateToCloud(userId, localTemplate);
         templatesSyncedCount++;

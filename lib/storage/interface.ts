@@ -8,19 +8,19 @@ import {
 
 export interface StorageAdapter {
   // Active workout
-  getActiveWorkout(): Promise<Workout | null>;
+  getActiveWorkout(userId?: string): Promise<Workout | null>;
   saveActiveWorkout(workout: Workout): Promise<void>;
   clearActiveWorkout(): Promise<void>;
 
   // Completed Workouts
-  getWorkouts(): Promise<Workout[]>;
+  getWorkouts(userId?: string): Promise<Workout[]>;
   getWorkoutById(id: string): Promise<Workout | null>;
   saveWorkout(workout: Workout): Promise<void>;
   updateWorkout(workout: Workout): Promise<void>;
   deleteWorkout(id: string): Promise<void>;
 
   // Workout Templates
-  getTemplates(): Promise<WorkoutTemplate[]>;
+  getTemplates(userId?: string): Promise<WorkoutTemplate[]>;
   saveTemplate(template: WorkoutTemplate): Promise<void>;
   deleteTemplate(id: string): Promise<void>;
 
