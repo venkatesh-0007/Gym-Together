@@ -7,6 +7,8 @@ import { Home, Users2, Trophy, History, User, Play } from 'lucide-react';
 import { useWorkout } from '@/lib/context/WorkoutContext';
 import { formatElapsed } from '@/lib/calculations/duration';
 import { cn } from '@/lib/utils/cn';
+import { motion } from 'framer-motion';
+import { triggerHaptic } from '@/lib/utils/haptics';
 
 export default function BottomNav() {
   const pathname = usePathname();
@@ -82,7 +84,7 @@ export default function BottomNav() {
       {/* Main Bottom Bar */}
       <nav
         aria-label="Main Navigation"
-        className="w-full max-w-md bg-[var(--card)]/95 border-t border-[var(--card-border)] backdrop-blur-lg px-1 pb-safe pt-2 pointer-events-auto"
+        className="w-full max-w-md glass-panel border-t border-[var(--card-border)]/50 px-2 pb-safe pt-2 pointer-events-auto shadow-[0_-10px_40px_rgba(0,0,0,0.3)] rounded-t-[32px] overflow-hidden"
       >
         <div className="flex items-center justify-around h-14">
           {navItems.map((item) => {
@@ -91,27 +93,32 @@ export default function BottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => triggerHaptic('light')}
                 className={cn(
-                  'flex flex-col items-center justify-center flex-1 h-full py-1 rounded-xl transition-colors active:scale-95 select-none relative',
+                  'relative flex flex-col items-center justify-center flex-1 h-full py-1 rounded-xl select-none',
                   item.isActive
                     ? 'text-accent'
-                    : 'text-[var(--muted)] hover:text-[var(--foreground)]'
+                    : 'text-[var(--muted)] hover:text-[var(--foreground)] transition-colors'
                 )}
               >
-                <div className="relative">
-                  <Icon className={cn('w-5 h-5 transition-transform', item.isActive && 'scale-110 stroke-[2.5]')} />
-                  {item.isActive && (
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-accent rounded-full" />
-                  )}
+                <div className="relative z-10 flex flex-col items-center">
+                  <Icon className={cn('w-6 h-6 transition-transform duration-300', item.isActive && 'scale-110 stroke-[2.5]')} />
+                  <span
+                    className={cn(
+                      'text-[10px] font-medium mt-1 tracking-tight transition-all duration-300',
+                      item.isActive ? 'font-bold text-accent' : 'text-[var(--muted)]'
+                    )}
+                  >
+                    {item.label}
+                  </span>
                 </div>
-                <span
-                  className={cn(
-                    'text-[10px] font-medium mt-1 tracking-tight',
-                    item.isActive ? 'font-semibold text-accent' : 'text-[var(--muted)]'
-                  )}
-                >
-                  {item.label}
-                </span>
+                {item.isActive && (
+                  <motion.div
+                    layoutId="bottom-nav-active"
+                    className="absolute inset-0 bg-accent/10 rounded-2xl"
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  />
+                )}
               </Link>
             );
           })}

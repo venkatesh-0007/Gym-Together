@@ -2,9 +2,12 @@
 
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { Clock, Calendar, Check, ArrowLeft, Trash2 } from 'lucide-react';
+import { Clock, Calendar, Check, Trash2 } from 'lucide-react';
 import { Mood, Workout } from '@/lib/types/workout';
 import { formatDurationHuman, formatTime, formatDateLabel } from '@/lib/calculations/duration';
+import NativeBottomSheet from '@/components/ui/NativeBottomSheet';
+import NativeButton from '@/components/ui/NativeButton';
+import { triggerHaptic } from '@/lib/utils/haptics';
 
 interface StopWorkoutModalProps {
   workout: Workout;
@@ -50,8 +53,8 @@ export default function StopWorkoutModal({
 
   const handleSave = async () => {
     setIsSaving(true);
+    triggerHaptic('success');
     try {
-      // Fire celebratory confetti!
       try {
         confetti({
           particleCount: 80,
@@ -59,9 +62,7 @@ export default function StopWorkoutModal({
           origin: { y: 0.6 },
           colors: ['#10b981', '#34d399', '#f59e0b', '#ffffff'],
         });
-      } catch {
-        // Safe fallback
-      }
+      } catch {}
 
       await onSave({
         mood: selectedMood,
@@ -73,60 +74,44 @@ export default function StopWorkoutModal({
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) onCancel();
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6 duration-300">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-xs font-semibold py-1.5 px-2.5 rounded-xl hover:bg-zinc-800 transition-colors active:scale-95"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Resume</span>
-          </button>
-          <span className="text-xs uppercase tracking-wider font-semibold text-emerald-400">
-            Finish Session
-          </span>
-          <div className="w-16" />
-        </div>
-
-        <div className="text-center">
-          <h2 className="text-2xl font-black text-white tracking-tight">
-            Workout Complete 🎉
-          </h2>
-          <p className="text-xs text-zinc-400 mt-1">
-            Great job! Review your workout summary before saving.
-          </p>
-        </div>
-
+    <NativeBottomSheet
+      open={true}
+      onOpenChange={handleOpenChange}
+      title="Workout Complete 🎉"
+      description="Great job! Review your workout summary before saving."
+    >
+      <div className="flex flex-col gap-6">
         {/* Time Summary Box */}
-        <div className="bg-zinc-950/80 border border-zinc-800/90 rounded-2xl p-4 divide-y divide-zinc-800/60">
+        <div className="bg-[var(--card-subtle)] border border-[var(--card-border)] rounded-[20px] p-4 divide-y divide-[var(--card-border)] shadow-sm">
           <div className="flex justify-between items-center pb-3">
-            <span className="text-xs font-medium text-zinc-400 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-sm font-medium text-[var(--muted)] flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-[var(--primary)]" />
               Total Duration
             </span>
-            <span className="text-xl font-bold font-mono text-emerald-400">
+            <span className="text-xl font-bold font-mono text-[var(--primary)]">
               {durationLabel}
             </span>
           </div>
 
-          <div className="flex justify-between items-center py-2.5 text-xs">
-            <span className="text-zinc-500 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-zinc-400" />
+          <div className="flex justify-between items-center py-3 text-sm">
+            <span className="text-[var(--muted)] flex items-center gap-1.5">
+              <Calendar className="w-4 h-4" />
               Date & Time
             </span>
-            <span className="text-zinc-300 font-medium">
+            <span className="text-[var(--foreground)] font-medium">
               {formatDateLabel(workout.date)} · {startTimeLabel} → {finishTimeLabel}
             </span>
           </div>
 
           {workout.exercises && workout.exercises.length > 0 && (
-            <div className="flex justify-between items-center pt-2.5 text-xs">
-              <span className="text-zinc-500">Exercises Completed</span>
-              <span className="text-zinc-300 font-medium">
+            <div className="flex justify-between items-center pt-3 text-sm">
+              <span className="text-[var(--muted)]">Exercises Completed</span>
+              <span className="text-[var(--foreground)] font-medium">
                 {workout.exercises.length} exercise{workout.exercises.length === 1 ? '' : 's'}
               </span>
             </div>
@@ -134,8 +119,8 @@ export default function StopWorkoutModal({
         </div>
 
         {/* Workout Mood */}
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+        <div className="flex flex-col gap-2.5">
+          <label className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider pl-1">
             How did it feel?
           </label>
           <div className="grid grid-cols-5 gap-2">
@@ -145,17 +130,20 @@ export default function StopWorkoutModal({
                 <button
                   key={item.value}
                   type="button"
-                  onClick={() => setSelectedMood(item.value)}
-                  className={`flex flex-col items-center justify-center p-2.5 rounded-2xl border transition-all active:scale-95 ${
+                  onClick={() => {
+                    triggerHaptic('light');
+                    setSelectedMood(item.value);
+                  }}
+                  className={`flex flex-col items-center justify-center py-3 rounded-[18px] border transition-all active:scale-95 ${
                     isSelected
-                      ? 'bg-emerald-950/60 border-emerald-500 text-white shadow-sm'
-                      : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                      ? 'bg-[var(--primary-subtle)] border-[var(--primary)] shadow-sm'
+                      : 'bg-[var(--card-subtle)] border-[var(--card-border)] hover:border-[var(--muted)]'
                   }`}
                 >
-                  <span className="text-2xl">{item.emoji}</span>
+                  <span className="text-2xl mb-1">{item.emoji}</span>
                   <span
-                    className={`text-[10px] mt-1 font-medium ${
-                      isSelected ? 'text-emerald-300 font-semibold' : 'text-zinc-500'
+                    className={`text-[10px] font-medium tracking-tight ${
+                      isSelected ? 'text-[var(--primary)] font-bold' : 'text-[var(--muted)]'
                     }`}
                   >
                     {item.label}
@@ -167,101 +155,96 @@ export default function StopWorkoutModal({
         </div>
 
         {/* Workout Notes */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-2.5">
           <label
             htmlFor="workout-notes"
-            className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+            className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider pl-1"
           >
-            Workout Notes (Optional)
+            Workout Notes
           </label>
           <textarea
             id="workout-notes"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="Felt great on bench press, increased weight on second set..."
-            rows={3}
-            className="w-full bg-zinc-950/80 border border-zinc-800 rounded-2xl p-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500 transition-colors resize-none"
+            placeholder="Felt great on bench press..."
+            rows={2}
+            className="w-full bg-[var(--card-subtle)] border border-[var(--card-border)] rounded-[20px] p-4 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all resize-none"
           />
         </div>
 
         {/* Optional Body Weight */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-2.5">
+          <div className="flex justify-between items-center pl-1">
             <label
               htmlFor="body-weight-input"
-              className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+              className="text-xs font-bold text-[var(--muted)] uppercase tracking-wider"
             >
-              Today's Body Weight (Optional)
+              Today's Body Weight
             </label>
-            <span className="text-[11px] text-zinc-500">{weightUnit}</span>
+            <span className="text-[11px] font-bold text-[var(--muted)] bg-[var(--card-border)] px-2 py-0.5 rounded-md">{weightUnit}</span>
           </div>
-          <div className="relative">
-            <input
-              id="body-weight-input"
-              type="number"
-              step="0.1"
-              value={bodyWeight}
-              onChange={(e) => setBodyWeight(e.target.value)}
-              placeholder={`e.g. ${weightUnit === 'kg' ? '78.5' : '172.5'}`}
-              className="w-full bg-zinc-950/80 border border-zinc-800 rounded-2xl px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500 transition-colors"
-            />
-          </div>
+          <input
+            id="body-weight-input"
+            type="number"
+            step="0.1"
+            value={bodyWeight}
+            onChange={(e) => setBodyWeight(e.target.value)}
+            placeholder={`e.g. ${weightUnit === 'kg' ? '78.5' : '172.5'}`}
+            className="w-full bg-[var(--card-subtle)] border border-[var(--card-border)] rounded-[20px] px-4 py-3.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] transition-all"
+          />
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col gap-2.5 pt-1">
-          <button
-            type="button"
+        <div className="flex flex-col gap-3 mt-2">
+          <NativeButton
             onClick={handleSave}
             disabled={isSaving}
-            className="w-full h-14 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-emerald-950 font-black rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all text-base disabled:opacity-50"
+            className="!bg-[#10b981] !shadow-[0_8px_20px_-5px_rgba(16,185,129,0.35)]"
           >
             <Check className="w-5 h-5 stroke-[2.5]" />
             {isSaving ? 'Saving...' : 'Save Workout'}
-          </button>
-
-          <button
-            type="button"
-            onClick={onCancel}
-            className="w-full h-11 text-zinc-400 hover:text-zinc-200 active:scale-95 text-xs font-semibold flex items-center justify-center transition-colors"
-          >
-            Cancel & Keep Working Out
-          </button>
+          </NativeButton>
 
           {!showDiscardConfirm ? (
-            <button
-              type="button"
-              onClick={() => setShowDiscardConfirm(true)}
-              className="text-rose-400/70 hover:text-rose-400 text-xs font-medium py-1 transition-colors"
-            >
-              Discard this workout
-            </button>
+            <div className="flex gap-3">
+              <NativeButton
+                variant="secondary"
+                onClick={onCancel}
+              >
+                Keep Going
+              </NativeButton>
+              <NativeButton
+                variant="ghost"
+                onClick={() => setShowDiscardConfirm(true)}
+                className="!text-[var(--danger)]"
+              >
+                Discard
+              </NativeButton>
+            </div>
           ) : (
-            <div className="p-3 bg-rose-950/40 border border-rose-900/60 rounded-2xl flex flex-col gap-2 text-center animate-in fade-in">
-              <p className="text-xs text-rose-300 font-medium">
-                Are you sure? This session will be permanently deleted.
+            <div className="p-4 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-[24px] flex flex-col gap-3 text-center animate-in fade-in zoom-in-95">
+              <p className="text-xs text-[var(--danger)] font-bold">
+                Permanently delete this session?
               </p>
               <div className="flex gap-2">
-                <button
-                  type="button"
+                <NativeButton
+                  variant="secondary"
                   onClick={() => setShowDiscardConfirm(false)}
-                  className="flex-1 py-1.5 bg-zinc-800 text-zinc-300 text-xs font-semibold rounded-xl"
                 >
-                  No, Keep It
-                </button>
-                <button
-                  type="button"
+                  Cancel
+                </NativeButton>
+                <NativeButton
+                  variant="danger"
                   onClick={onDiscard}
-                  className="flex-1 py-1.5 bg-rose-600 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" />
                   Discard
-                </button>
+                </NativeButton>
               </div>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </NativeBottomSheet>
   );
 }

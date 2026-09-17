@@ -126,7 +126,7 @@ html[data-accent="rose"] {
   --color-card-border: var(--card-border);
   --color-primary: var(--primary);
   --color-danger: var(--danger);
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
@@ -284,37 +284,49 @@ body {
   box-shadow: 0 10px 25px -5px var(--primary-glow);
 }
 
-/* Refined Structured Card */
+/* Refined Structured Card - Apple Squircle Look */
 .gym-card {
   background: var(--card);
   border: 1px solid var(--card-border);
-  border-radius: 1.5rem;
+  border-radius: 1.5rem; /* ~24px squircle */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 20px -5px rgba(0, 0, 0, 0.1);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .gym-card:hover {
   border-color: var(--card-hover-border);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 30px -5px rgba(0, 0, 0, 0.15);
 }
 
 /* Interactive primary button with dynamic accent */
 .gym-btn-primary {
   background-color: var(--primary);
   color: var(--primary-foreground);
-  font-weight: 800;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   border-radius: 1rem;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 10px 20px -5px var(--primary-glow);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 8px 20px -5px var(--primary-glow);
   touch-action: manipulation;
 }
 
 .gym-btn-primary:hover {
   background-color: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 14px 28px -5px var(--primary-glow);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 12px 24px -5px var(--primary-glow);
 }
 
 .gym-btn-primary:active {
   background-color: var(--primary-active);
-  transform: scale(0.98);
+}
+
+/* Glassmorphism utility for native feel */
+.glass-panel {
+  background-color: rgba(18, 18, 21, 0.65);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+html[data-theme="light"] .glass-panel {
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }

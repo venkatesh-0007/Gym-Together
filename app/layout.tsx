@@ -5,6 +5,7 @@ import { WorkoutProvider } from '@/lib/context/WorkoutContext';
 import BottomNav from '@/components/layout/BottomNav';
 import Header from '@/components/layout/Header';
 import DesktopSidebar from '@/components/layout/DesktopSidebar';
+import PageTransition from '@/components/layout/PageTransition';
 
 export const viewport: Viewport = {
   themeColor: '#09090b',
@@ -89,8 +90,10 @@ export default function RootLayout({
                 </div>
 
                 {/* Content Container (Mobile-first width on phone, wide structured layout on desktop) */}
-                <div className="w-full max-w-md md:max-w-4xl lg:max-w-5xl mx-auto flex-1 flex flex-col pb-24 md:pb-12 md:py-6">
-                  {children}
+                <div className="w-full max-w-md md:max-w-4xl lg:max-w-5xl mx-auto flex-1 flex flex-col pb-24 md:pb-12 md:py-6 overflow-hidden">
+                  <PageTransition>
+                    {children}
+                  </PageTransition>
                 </div>
 
                 {/* Mobile Bottom Navigation */}

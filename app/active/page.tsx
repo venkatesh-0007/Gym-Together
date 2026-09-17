@@ -9,6 +9,7 @@ import { formatElapsed, formatTime } from '@/lib/calculations/duration';
 import StopWorkoutModal from '@/components/workout/StopWorkoutModal';
 import RestTimer from '@/components/workout/RestTimer';
 import ExerciseLogger from '@/components/workout/ExerciseLogger';
+import NativeButton from '@/components/ui/NativeButton';
 import { triggerHaptic } from '@/lib/utils/haptics';
 
 export default function ActiveWorkoutPage() {
@@ -41,16 +42,17 @@ export default function ActiveWorkoutPage() {
         <p className="text-sm text-zinc-400 mt-1 max-w-xs">
           Start a new session to begin tracking your workout duration and exercises.
         </p>
-        <button
-          type="button"
+        <NativeButton
+          variant="primary"
+          hapticFeedback="medium"
           onClick={async () => {
             await startWorkout(undefined, activeProfile.id);
           }}
-          className="mt-6 w-full max-w-xs h-14 gym-btn-primary active:scale-[0.98] font-black rounded-2xl flex items-center justify-center gap-2 text-base"
+          className="mt-6 max-w-xs"
         >
           <Play className="w-5 h-5 fill-current" />
           Start Workout
-        </button>
+        </NativeButton>
       </div>
     );
   }
@@ -126,17 +128,15 @@ export default function ActiveWorkoutPage() {
           </div>
 
           {/* PRIMARY ACTION: LARGE STOP WORKOUT BUTTON */}
-          <button
-            type="button"
-            onClick={() => {
-              triggerHaptic('medium');
-              setIsStopModalOpen(true);
-            }}
-            className="w-full h-16 bg-rose-600 hover:bg-rose-500 active:scale-[0.98] text-white font-black rounded-2xl flex items-center justify-center gap-2.5 shadow-xl shadow-rose-600/30 transition-all text-lg tracking-wide select-none hover:-translate-y-0.5"
+          <NativeButton
+            variant="danger"
+            hapticFeedback="medium"
+            onClick={() => setIsStopModalOpen(true)}
+            className="!h-16 text-lg"
           >
             <StopCircle className="w-6 h-6 stroke-[2.5]" />
             STOP WORKOUT
-          </button>
+          </NativeButton>
         </div>
 
         {/* RIGHT COLUMN: EXERCISES & SETS LOGGER */}
