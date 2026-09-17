@@ -101,6 +101,21 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
           authProvider: 'supabase',
         };
 
+        if (!dbProfile) {
+          await supabase.from('profiles').upsert({
+            id: authUser.id,
+            name: authUser.name,
+            email: authUser.email,
+            username: authUser.username,
+            avatar: authUser.avatar,
+            bio: authUser.bio,
+            buddy_code: authUser.buddyCode,
+            level_title: authUser.levelTitle,
+            weekly_goal: authUser.weeklyGoal,
+            created_at: authUser.createdAt,
+          }).catch(err => console.warn('Failed to auto-repair profile:', err));
+        }
+
         setCurrentUser(authUser);
         setActiveProfileState(authUser);
         authService.setSession(authUser);

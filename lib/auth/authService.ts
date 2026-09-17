@@ -167,7 +167,7 @@ class AuthService {
       id: data.user.id,
       name: profileData.name || data.user.user_metadata?.name || 'Lifter',
       email: email,
-      username: profileData.username || `@${(profileData.name || 'lifter').toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+      username: profileData.username || `@${(profileData.name || data.user.user_metadata?.name || 'lifter').toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
       avatar: profileData.avatar || '⚡',
       bio: profileData.bio || '',
       buddyCode: profileData.buddy_code || `GYM-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -176,6 +176,21 @@ class AuthService {
       createdAt: profileData.created_at || new Date().toISOString(),
       authProvider: 'supabase',
     };
+
+    if (!dbProfile) {
+      await supabase.from('profiles').upsert({
+        id: authUser.id,
+        name: authUser.name,
+        email: authUser.email,
+        username: authUser.username,
+        avatar: authUser.avatar,
+        bio: authUser.bio,
+        buddy_code: authUser.buddyCode,
+        level_title: authUser.levelTitle,
+        weekly_goal: authUser.weeklyGoal,
+        created_at: authUser.createdAt,
+      }).catch(err => console.warn('Failed to upsert missing profile on login:', err));
+    }
 
     const accounts = this.getStoredAccounts();
     const accountIdx = accounts.findIndex((a) => a.id === data.user!.id);
