@@ -17,7 +17,7 @@ export default function RecoveryModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-sm bg-zinc-900 border border-zinc-700/80 rounded-3xl p-6 shadow-2xl flex flex-col gap-5 text-center animate-in slide-in-from-bottom-4 duration-300">
+      <div className="w-full max-w-sm bg-zinc-900 border border-zinc-700/80 rounded-2xl p-6 shadow-2xl flex flex-col gap-5 text-center animate-in slide-in-from-bottom-4 duration-300">
         <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
           <AlertCircle className="w-7 h-7" />
         </div>

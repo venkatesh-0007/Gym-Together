@@ -89,10 +89,10 @@ export default function HomePage() {
 
             {activeWorkout ? (
               /* Running Active Workout Card */
-              <div className="w-full bg-gradient-to-br from-[var(--primary-subtle)] via-[var(--card)] to-[var(--card)] border border-accent rounded-3xl p-6 shadow-2xl flex flex-col gap-5 relative overflow-hidden transition-all hover:border-accent">
+              <div className="w-full bg-gradient-to-br from-[var(--primary-subtle)] via-[var(--card)] to-[var(--card)] border border-accent rounded-2xl p-6 shadow-2xl flex flex-col gap-5 relative overflow-hidden transition-all hover:border-accent">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 px-3 py-1 bg-accent-subtle rounded-full border border-accent-subtle">
-                    <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
+                  <div className="flex items-center gap-2 px-3 py-1 bg-accent-subtle rounded-2xl border border-accent-subtle">
+                    <span className="w-2 h-2 rounded-2xl bg-accent animate-ping" />
                     <span className="text-[11px] font-bold text-accent uppercase tracking-wider">
                       Session In Progress
                     </span>
@@ -106,14 +106,14 @@ export default function HomePage() {
                   <p className="text-xs text-[var(--muted)] uppercase font-semibold tracking-wider">
                     Elapsed Time
                   </p>
-                  <p className="text-5xl font-black font-mono tracking-tight text-[var(--foreground)] mt-1">
+                  <p className="text-5xl font-bold font-mono tracking-tight text-[var(--foreground)] mt-1">
                     {formatElapsed(elapsedSeconds)}
                   </p>
                 </div>
 
                 <Link
                   href="/active"
-                  className="w-full h-14 gym-btn-primary active:scale-[0.98] font-black rounded-2xl flex items-center justify-center gap-2 text-base select-none"
+                  className="w-full h-14 gym-btn-primary active:scale-[0.98] font-bold rounded-2xl flex items-center justify-center gap-2 text-base select-none"
                 >
                   <span>Continue Workout</span>
                   <ArrowRight className="w-5 h-5" />
@@ -122,12 +122,12 @@ export default function HomePage() {
             ) : (
               /* Empty / Ready State with Hero Button */
               <div className="gym-card p-6 shadow-xl flex flex-col items-center text-center gap-5 transition-all">
-                <div className="w-16 h-16 rounded-3xl bg-[var(--card-subtle)] border border-[var(--card-border)] flex items-center justify-center text-[var(--muted)] shadow-inner">
+                <div className="w-16 h-16 rounded-2xl bg-[var(--card-subtle)] border border-[var(--card-border)] flex items-center justify-center text-[var(--muted)] shadow-inner">
                   <Dumbbell className="w-8 h-8 text-accent" />
                 </div>
 
                 <div>
-                  <h2 className="text-2xl font-black text-[var(--foreground)] tracking-tight">
+                  <h2 className="text-2xl font-bold text-[var(--foreground)] tracking-tight">
                     {streak.hasWorkedOutToday ? 'Session Finished Today!' : 'Ready to Train?'}
                   </h2>
                   <p className="text-xs text-[var(--muted)] mt-1 max-w-xs mx-auto">
@@ -142,7 +142,7 @@ export default function HomePage() {
                   type="button"
                   onClick={() => handleStartWorkout()}
                   disabled={isStarting}
-                  className="w-full h-16 gym-btn-primary active:scale-[0.98] font-black rounded-2xl flex items-center justify-center gap-2.5 text-lg tracking-wide select-none disabled:opacity-50 hover:-translate-y-0.5"
+                  className="w-full h-16 gym-btn-primary active:scale-[0.98] font-bold rounded-2xl flex items-center justify-center gap-2.5 text-lg tracking-wide select-none disabled:opacity-50 hover:-translate-y-0.5"
                 >
                   <Play className="w-6 h-6 fill-current" />
                   <span>{isStarting ? 'STARTING...' : 'START WORKOUT'}</span>
@@ -189,7 +189,7 @@ export default function HomePage() {
           {/* DUO PARTNER WORKOUT BANNER */}
           <Link
             href="/duo"
-            className="w-full bg-[var(--card)] border border-[var(--card-border)] hover:border-accent rounded-3xl p-4 flex items-center justify-between transition-all group hover:scale-[1.01] shadow-sm"
+            className="w-full bg-[var(--card)] border border-[var(--card-border)] hover:border-accent rounded-2xl p-4 flex items-center justify-between transition-all group hover:scale-[1.01] shadow-sm"
           >
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-2xl bg-accent-subtle border border-accent-subtle flex items-center justify-center text-accent group-hover:scale-105 transition-transform">
@@ -223,9 +223,9 @@ export default function HomePage() {
             </div>
 
             {/* Progress Bar */}
-            <div className="w-full h-3.5 bg-[var(--card-subtle)] rounded-full overflow-hidden p-0.5 border border-[var(--card-border)]">
+            <div className="w-full h-3.5 bg-[var(--card-subtle)] rounded-2xl overflow-hidden p-0.5 border border-[var(--card-border)]">
               <div
-                className="h-full bg-accent rounded-full transition-all duration-700 shadow-sm"
+                className="h-full bg-accent rounded-2xl transition-all duration-700 shadow-sm"
                 style={{ width: `${weeklyStats.goalProgressPercent}%` }}
               />
             </div>
@@ -258,7 +258,7 @@ export default function HomePage() {
                 />
                 <span>Active Streak</span>
               </div>
-              <p className="text-3xl font-black text-[var(--foreground)] mt-1">
+              <p className="text-3xl font-bold text-[var(--foreground)] mt-1">
                 {streak.currentStreak}{' '}
                 <span className="text-xs font-semibold text-[var(--muted)]">
                   {streak.currentStreak === 1 ? 'day' : 'days'}
@@ -277,7 +277,7 @@ export default function HomePage() {
                 <Clock className="w-4 h-4 text-accent" />
                 <span>Gym Time</span>
               </div>
-              <p className="text-3xl font-black text-[var(--foreground)] mt-1">
+              <p className="text-3xl font-bold text-[var(--foreground)] mt-1">
                 {formatDurationHuman(weeklyStats.totalDurationSeconds)}
               </p>
               <p className="text-[11px] text-[var(--muted)] mt-auto">

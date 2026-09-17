@@ -72,7 +72,7 @@ export default function TemplatesPage() {
     <div className="flex-1 flex flex-col px-4 sm:px-6 py-6 gap-6 max-w-5xl mx-auto w-full animate-page-enter">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-white tracking-tight">
             Workout Routines
           </h1>
           <p className="text-xs text-zinc-400 mt-0.5">
@@ -167,7 +167,7 @@ export default function TemplatesPage() {
       {/* Create Custom Template Modal */}
       {isCreateOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6">
+          <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-6">
             <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
               <h3 className="font-bold text-white text-base">Create Routine Template</h3>
               <button

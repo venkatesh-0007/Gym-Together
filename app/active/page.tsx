@@ -33,10 +33,10 @@ export default function ActiveWorkoutPage() {
   if (!activeWorkout) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center animate-page-enter">
-        <div className="w-16 h-16 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-4 shadow-xl">
+        <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-4 shadow-xl">
           <StopCircle className="w-8 h-8" />
         </div>
-        <h2 className="text-2xl font-black text-white tracking-tight">
+        <h2 className="text-2xl font-bold text-white tracking-tight">
           No Active Workout
         </h2>
         <p className="text-sm text-zinc-400 mt-1 max-w-xs">
@@ -72,10 +72,10 @@ export default function ActiveWorkoutPage() {
           <span>Dashboard</span>
         </button>
 
-        <div className="flex items-center gap-2 px-3 py-1 bg-accent-subtle border border-accent-subtle rounded-full">
+        <div className="flex items-center gap-2 px-3 py-1 bg-accent-subtle border border-accent-subtle rounded-2xl">
           <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-accent"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-2xl bg-accent opacity-75"></span>
+            <span className="relative inline-flex rounded-2xl h-2.5 w-2.5 bg-accent"></span>
           </span>
           <span className="text-[11px] font-bold text-accent uppercase tracking-wider">
             Recording Live
@@ -99,7 +99,7 @@ export default function ActiveWorkoutPage() {
       {/* Routine Title if from Template */}
       {activeWorkout.templateName && (
         <div className="text-center -mb-2">
-          <span className="px-3 py-1 bg-[var(--card-subtle)] border border-[var(--card-border)] rounded-full text-xs font-semibold text-[var(--foreground)]">
+          <span className="px-3 py-1 bg-[var(--card-subtle)] border border-[var(--card-border)] rounded-2xl text-xs font-semibold text-[var(--foreground)]">
             {activeWorkout.templateName}
           </span>
         </div>
@@ -116,7 +116,7 @@ export default function ActiveWorkoutPage() {
             </span>
 
             {/* Big Live Clock */}
-            <div className="text-5xl sm:text-6xl font-black font-mono tracking-tight text-[var(--foreground)] my-2 select-none">
+            <div className="text-5xl sm:text-6xl font-bold font-mono tracking-tight text-[var(--foreground)] my-2 select-none">
               {formatElapsed(elapsedSeconds)}
             </div>
 

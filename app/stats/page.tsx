@@ -74,7 +74,7 @@ export default function StatsPage() {
     <div className="flex-1 flex flex-col px-4 sm:px-6 py-4 sm:py-6 gap-6 animate-page-enter">
       {/* Page Title */}
       <div>
-        <h1 className="text-3xl font-black text-white tracking-tight">
+        <h1 className="text-3xl font-bold text-white tracking-tight">
           Performance & Analytics
         </h1>
         <p className="text-xs text-zinc-400 mt-1">
@@ -85,12 +85,12 @@ export default function StatsPage() {
       {/* TOP METRICS GRID: 2 cols on mobile, 4 cols on desktop */}
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Weekly Workouts */}
-        <div className="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-5 flex flex-col gap-1 hover:border-zinc-700 transition-all">
+        <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-1 hover:border-zinc-700 transition-all">
           <span className="text-xs text-zinc-400 flex items-center gap-1.5 font-medium">
             <Dumbbell className="w-4 h-4 text-emerald-400" />
             This Week
           </span>
-          <p className="text-3xl font-black text-white mt-1">
+          <p className="text-3xl font-bold text-white mt-1">
             {weekly.workoutCount}{' '}
             <span className="text-xs font-semibold text-zinc-400">
               / {weekly.weeklyGoal}
@@ -102,12 +102,12 @@ export default function StatsPage() {
         </div>
 
         {/* Weekly Duration */}
-        <div className="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-5 flex flex-col gap-1 hover:border-zinc-700 transition-all">
+        <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-1 hover:border-zinc-700 transition-all">
           <span className="text-xs text-zinc-400 flex items-center gap-1.5 font-medium">
             <Clock className="w-4 h-4 text-emerald-400" />
             Gym Time
           </span>
-          <p className="text-3xl font-black text-white mt-1">
+          <p className="text-3xl font-bold text-white mt-1">
             {formatDurationHuman(weekly.totalDurationSeconds)}
           </p>
           <p className="text-[11px] text-zinc-400">
@@ -116,12 +116,12 @@ export default function StatsPage() {
         </div>
 
         {/* Streak */}
-        <div className="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-5 flex flex-col gap-1 hover:border-zinc-700 transition-all">
+        <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-1 hover:border-zinc-700 transition-all">
           <span className="text-xs text-zinc-400 flex items-center gap-1.5 font-medium">
             <Flame className="w-4 h-4 text-amber-500 animate-pulse" />
             Streak
           </span>
-          <p className="text-3xl font-black text-white mt-1">
+          <p className="text-3xl font-bold text-white mt-1">
             {streak.currentStreak}d
           </p>
           <p className="text-[11px] text-zinc-400">
@@ -130,12 +130,12 @@ export default function StatsPage() {
         </div>
 
         {/* Month Total */}
-        <div className="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-5 flex flex-col gap-1 hover:border-zinc-700 transition-all">
+        <div className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-1 hover:border-zinc-700 transition-all">
           <span className="text-xs text-zinc-400 flex items-center gap-1.5 font-medium">
             <Trophy className="w-4 h-4 text-amber-400" />
             This Month
           </span>
-          <p className="text-3xl font-black text-white mt-1">
+          <p className="text-3xl font-bold text-white mt-1">
             {monthly.workoutCount}
           </p>
           <p className="text-[11px] text-zinc-400">
@@ -147,7 +147,7 @@ export default function StatsPage() {
       {/* CHARTS ROW: 1 col on mobile, 2 cols on desktop */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* CHART: WORKOUTS PER WEEK */}
-        <section className="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-5 shadow-sm flex flex-col gap-3.5 hover:border-zinc-700 transition-all">
+        <section className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-5 shadow-sm flex flex-col gap-3.5 hover:border-zinc-700 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-extrabold tracking-wider text-zinc-400">
               Workouts Per Week
@@ -192,7 +192,7 @@ export default function StatsPage() {
         </section>
 
         {/* CHART: GYM TIME PER WEEK */}
-        <section className="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-5 shadow-sm flex flex-col gap-3.5 hover:border-zinc-700 transition-all">
+        <section className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-5 shadow-sm flex flex-col gap-3.5 hover:border-zinc-700 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase font-extrabold tracking-wider text-zinc-400">
               Total Gym Time (Minutes)
@@ -244,7 +244,7 @@ export default function StatsPage() {
       </div>
 
       {/* BODY WEIGHT SECTION */}
-      <section className="bg-zinc-900/70 border border-zinc-800 rounded-3xl p-5 shadow-sm flex flex-col gap-3.5 hover:border-zinc-700 transition-all">
+      <section className="bg-zinc-900/70 border border-zinc-800 rounded-2xl p-5 shadow-sm flex flex-col gap-3.5 hover:border-zinc-700 transition-all">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Scale className="w-4 h-4 text-emerald-400" />
@@ -265,7 +265,7 @@ export default function StatsPage() {
 
         {latestWeight ? (
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-black text-white font-mono">
+            <span className="text-4xl font-bold text-white font-mono">
               {latestWeight.weight}
             </span>
             <span className="text-sm font-bold text-emerald-400">
@@ -327,7 +327,7 @@ export default function StatsPage() {
       {/* Log Body Weight Modal */}
       {isWeightModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-xs bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4">
+          <div className="w-full max-w-xs bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-2xl flex flex-col gap-4">
             <h3 className="text-sm font-bold text-white text-center">
               Log Today&apos;s Body Weight
             </h3>

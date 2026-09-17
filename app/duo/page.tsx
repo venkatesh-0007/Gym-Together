@@ -30,11 +30,9 @@ import { formatElapsed, formatTime } from '@/lib/calculations/duration';
 import { triggerHaptic, playSuccessChime, playTimerDing } from '@/lib/utils/haptics';
 
 const HYPE_EMOJIS = [
-  { emoji: '🙌', label: 'High-Five' },
-  { emoji: '🔥', label: 'Beast' },
-  { emoji: '💥', label: 'Max Pump' },
+  { emoji: '💪', label: 'Respect' },
+  { emoji: '🔥', label: 'Fire' },
   { emoji: '👏', label: 'Solid Set' },
-  { emoji: '🏆', label: 'Champion' },
 ];
 
 export default function DuoPage() {
@@ -260,11 +258,11 @@ export default function DuoPage() {
       <div className="flex-1 flex flex-col px-4 sm:px-6 py-4 sm:py-6 gap-6 animate-page-enter">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold rounded-full uppercase tracking-wider">
+            <span className="px-2.5 py-0.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold rounded-2xl uppercase tracking-wider">
               Permanent Co-op
             </span>
           </div>
-          <h1 className="text-3xl font-black text-white tracking-tight mt-1">
+          <h1 className="text-3xl font-bold text-white tracking-tight mt-1">
             Training Partners
           </h1>
           <p className="text-xs text-zinc-400 mt-1 max-w-xl">
@@ -283,7 +281,7 @@ export default function DuoPage() {
         )}
 
         {/* ADD PARTNER SECTION */}
-        <div className="bg-zinc-900/80 border border-zinc-800 rounded-3xl p-5 shadow-xl flex flex-col gap-4">
+        <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 shadow-xl flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 shadow-inner">
               <UserPlus className="w-5 h-5" />
@@ -321,7 +319,7 @@ export default function DuoPage() {
           {isLoadingPartners ? (
             <div className="p-8 text-center text-zinc-500 text-sm animate-pulse">Loading partners...</div>
           ) : partners.length === 0 ? (
-            <div className="bg-zinc-900/40 border border-dashed border-zinc-800 rounded-3xl p-8 text-center flex flex-col items-center gap-2">
+            <div className="bg-zinc-900/40 border border-dashed border-zinc-800 rounded-2xl p-8 text-center flex flex-col items-center gap-2">
               <Users2 className="w-8 h-8 text-zinc-600 mb-2" />
               <p className="text-sm font-bold text-zinc-400">No partners yet</p>
               <p className="text-xs text-zinc-600">Share your code <strong className="text-emerald-500">{activeProfile.buddyCode}</strong> with a friend!</p>
@@ -329,7 +327,7 @@ export default function DuoPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {partners.map(partner => (
-                <div key={partner.id} className="bg-zinc-900 border border-zinc-800 rounded-3xl p-4 flex flex-col gap-4 shadow-lg hover:border-zinc-700 transition-colors">
+                <div key={partner.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col gap-4 shadow-lg hover:border-zinc-700 transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="text-3xl bg-zinc-800 w-12 h-12 flex items-center justify-center rounded-2xl shadow-inner border border-zinc-700/50">
                       {partner.avatar}
@@ -390,14 +388,14 @@ export default function DuoPage() {
     <div className="flex-1 flex flex-col px-4 sm:px-6 py-4 sm:py-6 gap-6 animate-page-enter relative">
       {/* REAL-TIME HYPE TOAST POPUP */}
       {receivedHype && (
-        <div className="fixed top-20 left-4 right-4 max-w-md mx-auto z-50 animate-in bounce-in duration-300">
-          <div className="bg-gradient-to-r from-emerald-950 to-zinc-900 border-2 border-emerald-400 rounded-2xl p-4 shadow-2xl flex items-center gap-3">
-            <span className="text-4xl animate-bounce">{receivedHype.emoji}</span>
+        <div className="fixed top-20 left-4 right-4 max-w-md mx-auto z-50 animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 shadow-xl flex items-center gap-3">
+            <span className="text-2xl">{receivedHype.emoji}</span>
             <div>
-              <p className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
-                {receivedHype.senderName} sent a {receivedHype.message}!
+              <p className="text-xs font-semibold text-zinc-400">
+                {receivedHype.senderName} sent {receivedHype.message}
               </p>
-              <p className="text-sm font-black text-white">Let's go! Keep crushing it! 💪</p>
+              <p className="text-sm font-bold text-white">Keep pushing!</p>
             </div>
           </div>
         </div>
@@ -407,10 +405,10 @@ export default function DuoPage() {
       <div className="flex items-center justify-between">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="w-2 h-2 rounded-2xl bg-emerald-400 animate-pulse" />
             Live Duo Session
           </span>
-          <h2 className="text-lg font-black text-white tracking-tight">
+          <h2 className="text-lg font-bold text-white tracking-tight">
             {activeRoom.workoutTitle}
           </h2>
         </div>
@@ -429,11 +427,11 @@ export default function DuoPage() {
         {/* LEFT COLUMN: TIMER, DUAL PARTNERS & CHEER BAR */}
         <div className="md:col-span-5 flex flex-col gap-4">
           {/* Synced Live Timer Card */}
-          <div className="w-full bg-zinc-900/70 border border-zinc-800 rounded-3xl py-6 px-4 flex flex-col items-center justify-center text-center shadow-lg relative overflow-hidden animate-pulse-glow">
+          <div className="w-full bg-zinc-900/70 border border-zinc-800 rounded-2xl py-6 px-4 flex flex-col items-center justify-center text-center shadow-lg relative overflow-hidden animate-pulse-glow">
             <span className="text-xs uppercase font-extrabold tracking-widest text-zinc-400">
               Synced Duo Duration
             </span>
-            <div className="text-5xl font-black font-mono tracking-tight text-white my-1">
+            <div className="text-5xl font-bold font-mono tracking-tight text-white my-1">
               {formatElapsed(elapsedSeconds)}
             </div>
             <p className="text-xs text-zinc-400">
@@ -516,7 +514,7 @@ export default function DuoPage() {
           <button
             type="button"
             onClick={handleFinishDuo}
-            className="w-full h-14 bg-rose-600 hover:bg-rose-500 active:scale-[0.98] text-white font-black rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-rose-600/30 text-base transition-all hover:-translate-y-0.5"
+            className="w-full h-14 bg-rose-600 hover:bg-rose-500 active:scale-[0.98] text-white font-bold rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-rose-600/30 text-base transition-all hover:-translate-y-0.5"
           >
             <StopCircle className="w-5 h-5 stroke-[2.5]" />
             <span>FINISH DUO SESSION</span>
@@ -526,7 +524,7 @@ export default function DuoPage() {
         {/* RIGHT COLUMN: QUICK SET LOGGER & LIVE FEED */}
         <div className="md:col-span-7 flex flex-col gap-4">
           {/* QUICK SET LOGGER FOR DUO SESSION */}
-          <div className="bg-zinc-900/80 border border-zinc-800 rounded-3xl p-5 flex flex-col gap-3 shadow-sm">
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 flex flex-col gap-3 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
                 <Dumbbell className="w-3.5 h-3.5 text-emerald-400" />
@@ -570,7 +568,7 @@ export default function DuoPage() {
             <button
               type="button"
               onClick={handleLogSet}
-              className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-emerald-950 font-black rounded-2xl flex items-center justify-center gap-2 text-sm shadow-md shadow-emerald-500/20 mt-1 transition-all hover:-translate-y-0.5"
+              className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-emerald-950 font-bold rounded-2xl flex items-center justify-center gap-2 text-sm shadow-md shadow-emerald-500/20 mt-1 transition-all hover:-translate-y-0.5"
             >
               <Check className="w-4 h-4 stroke-[3]" />
               <span>Record Set</span>
@@ -614,7 +612,7 @@ export default function DuoPage() {
                       </div>
 
                       <div className="text-right">
-                        <p className="font-mono font-black text-sm text-emerald-400">
+                        <p className="font-mono font-bold text-sm text-emerald-400">
                           {act.weight} {settings.weightUnit} × {act.reps}
                         </p>
                         <span className="text-[9px] text-zinc-500">

@@ -163,7 +163,7 @@ export default function SettingsPage() {
   return (
     <div className="flex-1 flex flex-col px-4 sm:px-6 py-6 gap-6 max-w-5xl mx-auto w-full animate-page-enter">
       <div>
-        <h1 className="text-2xl font-black text-[var(--foreground)] tracking-tight">
+        <h1 className="text-2xl font-bold text-[var(--foreground)] tracking-tight">
           Settings & Preferences
         </h1>
         <p className="text-xs text-[var(--muted)] mt-0.5">
@@ -248,7 +248,7 @@ export default function SettingsPage() {
                   }`}
                 >
                   <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center shadow-sm relative transition-transform"
+                    className="w-7 h-7 rounded-2xl flex items-center justify-center shadow-sm relative transition-transform"
                     style={{ backgroundColor: preset.hex }}
                   >
                     {isSelected && <Check className="w-4 h-4 text-white stroke-[3]" />}
@@ -409,12 +409,12 @@ export default function SettingsPage() {
                     soundEnabled: !settings.soundEnabled,
                   });
                 }}
-                className={`w-12 h-6 rounded-full transition-colors relative p-0.5 ${
+                className={`w-12 h-6 rounded-2xl transition-colors relative p-0.5 ${
                   settings.soundEnabled ? 'bg-accent' : 'bg-[var(--border-subtle)]'
                 }`}
               >
                 <div
-                  className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                  className={`w-5 h-5 rounded-2xl bg-white transition-transform ${
                     settings.soundEnabled ? 'translate-x-6' : 'translate-x-0'
                   }`}
                 />
@@ -468,13 +468,13 @@ export default function SettingsPage() {
                 </div>
               </div>
               {cloudSyncError && cloudSyncError.includes('permission') ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-2xl text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                  <span className="w-1.5 h-1.5 rounded-2xl bg-amber-400" />
                   Rules Action Needed
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-2xl text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="w-1.5 h-1.5 rounded-2xl bg-emerald-400 animate-pulse" />
                   Live Real-Time
                 </span>
               )}

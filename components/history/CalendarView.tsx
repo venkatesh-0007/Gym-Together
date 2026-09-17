@@ -67,7 +67,7 @@ export default function CalendarView({
   const todayStr = getLocalDateString(new Date());
 
   return (
-    <div className="w-full bg-zinc-900/70 border border-zinc-800/80 rounded-3xl p-5 shadow-sm flex flex-col gap-4">
+    <div className="w-full bg-zinc-900/70 border border-zinc-800/80 rounded-2xl p-5 shadow-sm flex flex-col gap-4">
       {/* Month Navigator Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-white">{monthName}</h3>
@@ -141,7 +141,7 @@ export default function CalendarView({
               {/* Workout indicator dot */}
               {hasWorkout && (
                 <span
-                  className={`w-1.5 h-1.5 rounded-full ${intensityColor} mt-0.5`}
+                  className={`w-1.5 h-1.5 rounded-2xl ${intensityColor} mt-0.5`}
                   title={`${minutes}m workout`}
                 />
               )}

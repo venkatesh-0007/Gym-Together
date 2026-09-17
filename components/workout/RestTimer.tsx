@@ -56,11 +56,11 @@ export default function RestTimer({
 
   return (
     <div className="fixed bottom-24 left-4 right-4 max-w-md mx-auto z-40 animate-in slide-in-from-bottom-4 duration-200">
-      <div className="bg-zinc-900/95 border border-emerald-500/40 rounded-3xl p-4 shadow-2xl backdrop-blur-xl flex items-center justify-between gap-3">
+      <div className="bg-zinc-900/95 border border-emerald-500/40 rounded-2xl p-4 shadow-2xl backdrop-blur-xl flex items-center justify-between gap-3">
         {/* Left: Timer Indicator */}
         <div className="flex items-center gap-3">
           <div
-            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-mono font-black text-lg transition-all ${
+            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-mono font-bold text-lg transition-all ${
               isCompleted
                 ? 'bg-emerald-500 text-emerald-950 animate-bounce'
                 : 'bg-emerald-950/70 border border-emerald-500/40 text-emerald-400'
@@ -73,7 +73,7 @@ export default function RestTimer({
             <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400">
               {isCompleted ? 'REST COMPLETE!' : 'RESTING'}
             </span>
-            <p className="text-2xl font-black font-mono tracking-tight text-white">
+            <p className="text-2xl font-bold font-mono tracking-tight text-white">
               {formatElapsed(Math.max(0, secondsRemaining))}
             </p>
           </div>

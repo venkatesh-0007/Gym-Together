@@ -153,7 +153,7 @@ export default function WorkoutDetailPage() {
               <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider">
                 {formatDateLabel(workout.date)}
               </span>
-              <h1 className="text-3xl md:text-4xl font-black font-mono text-emerald-400 mt-1 tracking-tight">
+              <h1 className="text-3xl md:text-4xl font-bold font-mono text-emerald-400 mt-1 tracking-tight">
                 {durationStr}
               </h1>
             </div>
@@ -328,7 +328,7 @@ export default function WorkoutDetailPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-center animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl flex flex-col gap-4 text-center animate-in zoom-in-95 duration-200">
             <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
               <Trash2 className="w-6 h-6" />
             </div>

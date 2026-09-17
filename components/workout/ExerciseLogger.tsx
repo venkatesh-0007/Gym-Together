@@ -243,7 +243,7 @@ export default function ExerciseLogger({
                   className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-zinc-800/40 select-none"
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span className="w-2 h-2 rounded-2xl bg-emerald-400" />
                     <div>
                       <h4 className="font-bold text-sm text-white tracking-tight">
                         {ex.name}
@@ -394,7 +394,7 @@ export default function ExerciseLogger({
       {/* Add Exercise Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom-6">
+          <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-5 shadow-2xl flex flex-col gap-4 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom-6">
             <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
               <h3 className="font-bold text-white text-base">Select or Create Exercise</h3>
               <button

@@ -29,7 +29,7 @@ export default function NativeBottomSheet({
         
         <div className="flex-1 overflow-y-auto bg-[var(--card)] p-4 rounded-t-[32px]">
           {/* iOS-style grabber */}
-          <div className="mx-auto mt-2 mb-6 h-1.5 w-12 flex-shrink-0 rounded-full bg-[var(--border-subtle)]" />
+          <div className="mx-auto mt-2 mb-6 h-1.5 w-12 flex-shrink-0 rounded-2xl bg-[var(--border-subtle)]" />
           
           {(title || description) && (
             <div className="mb-6 px-2 text-center">

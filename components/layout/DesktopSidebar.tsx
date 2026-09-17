@@ -68,15 +68,15 @@ export default function DesktopSidebar() {
           >
             <div className="flex items-center justify-between">
               <span className="flex items-center gap-1.5 text-[10px] font-bold text-accent uppercase tracking-wider">
-                <span className="w-2 h-2 rounded-full bg-accent animate-ping" />
+                <span className="w-2 h-2 rounded-2xl bg-accent animate-ping" />
                 Active Session
               </span>
-              <span className="px-2 py-0.5 bg-accent text-white rounded-lg text-[10px] font-black flex items-center gap-1">
+              <span className="px-2 py-0.5 bg-accent text-white rounded-lg text-[10px] font-bold flex items-center gap-1">
                 <Play className="w-2.5 h-2.5 fill-current" />
                 Resume
               </span>
             </div>
-            <p className="text-xl font-black font-mono text-[var(--foreground)] tracking-tight">
+            <p className="text-xl font-bold font-mono text-[var(--foreground)] tracking-tight">
               {formatElapsed(elapsedSeconds)}
             </p>
           </Link>
@@ -105,7 +105,7 @@ export default function DesktopSidebar() {
                 />
                 <span>{item.label}</span>
                 {item.isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent ml-auto" />
+                  <span className="w-1.5 h-1.5 rounded-2xl bg-accent ml-auto" />
                 )}
               </Link>
             );
@@ -163,7 +163,7 @@ export default function DesktopSidebar() {
           <div className="flex flex-col gap-1.5">
             <Link
               href="/login"
-              className="w-full py-2.5 px-3 bg-accent hover:opacity-90 active:scale-95 text-white font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-accent transition-all"
+              className="w-full py-2.5 px-3 bg-accent hover:opacity-90 active:scale-95 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-md shadow-accent transition-all"
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>Sign In / Register</span>

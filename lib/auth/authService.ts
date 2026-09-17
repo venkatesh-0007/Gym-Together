@@ -165,10 +165,10 @@ class AuthService {
 
     const authUser: AuthUser = {
       id: data.user.id,
-      name: profileData.name || data.user.user_metadata?.name || 'Lifter',
+      name: profileData.name || data.user.user_metadata?.name || 'User',
       email: email,
-      username: profileData.username || `@${(profileData.name || data.user.user_metadata?.name || 'lifter').toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
-      avatar: profileData.avatar || '⚡',
+      username: profileData.username || `@${(profileData.name || data.user.user_metadata?.name || 'user').toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+      avatar: profileData.avatar || '👤',
       bio: profileData.bio || '',
       buddyCode: profileData.buddy_code || `GYM-${Math.floor(1000 + Math.random() * 9000)}`,
       levelTitle: profileData.level_title || 'Gym Novice',

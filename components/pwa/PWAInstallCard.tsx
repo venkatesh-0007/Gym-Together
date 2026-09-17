@@ -33,7 +33,7 @@ export default function PWAInstallCard() {
             <p className="text-xs text-zinc-400">Running standalone on your device</p>
           </div>
         </div>
-        <span className="text-[10px] uppercase font-black tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
           Native PWA
         </span>
       </div>

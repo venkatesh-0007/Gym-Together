@@ -25,7 +25,7 @@ export default function Header() {
 
       <div className="flex items-center gap-2">
         {/* Streak Badge */}
-        <div className="flex items-center gap-1.5 px-3 py-1 bg-[var(--card-subtle)] border border-[var(--card-border)] rounded-full text-xs font-semibold">
+        <div className="flex items-center gap-1.5 px-3 py-1 bg-[var(--card-subtle)] border border-[var(--card-border)] rounded-2xl text-xs font-semibold">
           <Flame
             className={`w-4 h-4 ${
               streak.currentStreak > 0 ? 'text-amber-500 fill-amber-500 animate-pulse' : 'text-zinc-500'
@@ -40,7 +40,7 @@ export default function Header() {
         {isAuthenticated ? (
           <Link
             href="/profile"
-            className="w-8 h-8 rounded-full bg-[var(--card-subtle)] border border-accent flex items-center justify-center text-sm shadow hover:border-accent transition-all active:scale-95 ring-2 ring-accent/20"
+            className="w-8 h-8 rounded-2xl bg-[var(--card-subtle)] border border-accent flex items-center justify-center text-sm shadow hover:border-accent transition-all active:scale-95 ring-2 ring-accent/20"
             title={`Signed in as ${activeProfile.name}`}
           >
             <span>{activeProfile.avatar}</span>

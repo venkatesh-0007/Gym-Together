@@ -63,7 +63,7 @@ export default function LoginPage() {
             <Dumbbell className="w-7 h-7 text-white stroke-[2.5]" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-[var(--foreground)] tracking-tight">
+            <h1 className="text-2xl font-bold text-[var(--foreground)] tracking-tight">
               Sign In to Satatam
             </h1>
             <p className="text-xs text-[var(--muted)] mt-1">
@@ -150,7 +150,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 gym-btn-primary active:scale-[0.98] disabled:opacity-50 font-black rounded-2xl flex items-center justify-center gap-2 text-sm transition-all mt-2"
+            className="w-full h-12 gym-btn-primary active:scale-[0.98] disabled:opacity-50 font-bold rounded-2xl flex items-center justify-center gap-2 text-sm transition-all mt-2"
           >
             <span>{loading ? 'Authenticating...' : 'Sign In'}</span>
             <ArrowRight className="w-4 h-4" />

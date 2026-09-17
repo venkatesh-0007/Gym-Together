@@ -46,7 +46,7 @@ export default function HistoryPage() {
       {/* Top Controls */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">
+          <h1 className="text-3xl font-bold text-white tracking-tight">
             Workout History
           </h1>
           <p className="text-xs text-zinc-400 mt-1">
@@ -144,7 +144,7 @@ export default function HistoryPage() {
                             weekday: 'short',
                           })}
                         </span>
-                        <span className="text-sm font-black text-white font-mono leading-none mt-0.5">
+                        <span className="text-sm font-bold text-white font-mono leading-none mt-0.5">
                           {new Date(workout.startTime).getDate()}
                         </span>
                       </div>
@@ -170,7 +170,7 @@ export default function HistoryPage() {
       ) : (
         /* Workouts List Grouped by Month */
         displayedWorkouts.length === 0 ? (
-          <div className="bg-zinc-900/40 border border-dashed border-zinc-800 rounded-3xl p-10 text-center flex flex-col items-center gap-3">
+          <div className="bg-zinc-900/40 border border-dashed border-zinc-800 rounded-2xl p-10 text-center flex flex-col items-center gap-3">
             <div className="w-14 h-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center text-zinc-500">
               <Dumbbell className="w-7 h-7" />
             </div>
@@ -186,7 +186,7 @@ export default function HistoryPage() {
             {monthGroups.map((group) => (
               <div key={group.monthKey} className="flex flex-col gap-3">
                 {/* Month Header */}
-                <h2 className="text-xs font-black uppercase tracking-wider text-zinc-400 px-1">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400 px-1">
                   {group.monthTitle}
                 </h2>
 
@@ -211,7 +211,7 @@ export default function HistoryPage() {
                                 weekday: 'short',
                               })}
                             </span>
-                            <span className="text-sm font-black text-white font-mono leading-none mt-0.5">
+                            <span className="text-sm font-bold text-white font-mono leading-none mt-0.5">
                               {new Date(workout.startTime).getDate()}
                             </span>
                           </div>
