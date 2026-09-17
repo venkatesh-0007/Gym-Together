@@ -75,6 +75,59 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error('Error initializing accounts/auth:', e);
     }
+
+    // Subscribe to live Firebase Auth state changes across devices
+    let unsubAuth: (() => void) | null = null;
+    import('../firebase/config')
+      .then(({ getFirebaseAuth, getFirestoreDb }) => {
+        const auth = getFirebaseAuth();
+        if (auth) {
+          import('firebase/auth').then(({ onAuthStateChanged }) => {
+            unsubAuth = onAuthStateChanged(auth, async (fbUser) => {
+              if (fbUser && fbUser.email) {
+                const db = getFirestoreDb();
+                let remoteProfile: any = null;
+                if (db) {
+                  try {
+                    const { doc, getDoc } = await import('firebase/firestore');
+                    const snap = await getDoc(doc(db, 'users', fbUser.uid));
+                    if (snap.exists()) {
+                      remoteProfile = snap.data();
+                    }
+                  } catch (e) {
+                    console.warn('Could not fetch profile in onAuthStateChanged:', e);
+                  }
+                }
+
+                const authUser: AuthUser = {
+                  id: fbUser.uid,
+                  name: remoteProfile?.name || fbUser.displayName || 'Lifter',
+                  email: fbUser.email,
+                  username:
+                    remoteProfile?.username ||
+                    `@${(fbUser.displayName || 'lifter').toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+                  avatar: remoteProfile?.avatar || '⚡',
+                  bio: remoteProfile?.bio || '',
+                  buddyCode: remoteProfile?.buddyCode || `GYM-${Math.floor(1000 + Math.random() * 9000)}`,
+                  levelTitle: remoteProfile?.levelTitle || 'Gym Novice',
+                  weeklyGoal: remoteProfile?.weeklyGoal || 4,
+                  createdAt: remoteProfile?.createdAt || new Date().toISOString(),
+                  authProvider: 'firebase',
+                };
+
+                setCurrentUser(authUser);
+                setActiveProfileState(authUser);
+                authService.setSession(authUser);
+              }
+            });
+          });
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      if (unsubAuth) unsubAuth();
+    };
   }, []);
 
   const persistProfiles = (profiles: UserProfile[], currentActiveId?: string) => {

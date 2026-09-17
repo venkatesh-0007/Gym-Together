@@ -43,6 +43,7 @@ export default function SettingsPage() {
     refreshTemplates,
     isSyncingCloud,
     lastCloudSyncTime,
+    cloudSyncError,
     triggerCloudSync,
   } = useWorkout();
   const { currentUser } = useAccount();
@@ -50,6 +51,7 @@ export default function SettingsPage() {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [exportSuccess, setExportSuccess] = useState(false);
   const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<{ loading: boolean; success?: boolean; message?: string } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -118,6 +120,55 @@ export default function SettingsPage() {
     setShowClearConfirm(false);
     setImportMessage('All local gym data has been reset.');
     setTimeout(() => setImportMessage(null), 4000);
+  };
+
+  // Test live Cloud Firestore read/write connection
+  const handleTestCloudConnection = async () => {
+    if (!currentUser?.id) {
+      setTestResult({ loading: false, success: false, message: 'Please log in to test Cloud Sync.' });
+      return;
+    }
+    setTestResult({ loading: true });
+    try {
+      const { getFirestoreDb } = await import('@/lib/firebase/config');
+      const db = getFirestoreDb();
+      if (!db) {
+        setTestResult({ loading: false, success: false, message: 'Firebase configuration not found.' });
+        return;
+      }
+      const { doc, setDoc, getDoc } = await import('firebase/firestore');
+      const testDocRef = doc(db, 'users', currentUser.id, 'workouts', '_sync_test_ping');
+      await setDoc(
+        testDocRef,
+        {
+          test: true,
+          testedAt: new Date().toISOString(),
+          device: typeof navigator !== 'undefined' ? navigator.userAgent : 'web',
+        },
+        { merge: true }
+      );
+      const snap = await getDoc(testDocRef);
+      if (snap.exists()) {
+        setTestResult({
+          loading: false,
+          success: true,
+          message: 'Real-time Cloud Database is online & verified! Workouts sync live across your phone and PC.',
+        });
+        triggerHaptic('success');
+      } else {
+        setTestResult({ loading: false, success: false, message: 'Write succeeded but read failed.' });
+      }
+    } catch (err: any) {
+      const msg = err?.code || err?.message || String(err);
+      setTestResult({
+        loading: false,
+        success: false,
+        message: msg.includes('permission')
+          ? 'Permission Denied: Your Firebase Firestore Security Rules are blocking writes. Update rules in Firebase Console.'
+          : `Error connecting: ${msg}`,
+      });
+      triggerHaptic('warning');
+    }
   };
 
   const activeTheme = settings.theme || 'dark';
@@ -427,20 +478,65 @@ export default function SettingsPage() {
                   <span className="text-xs uppercase font-bold tracking-wider text-[var(--muted)]">
                     Cloud Database
                   </span>
-                  <p className="text-sm font-extrabold text-[var(--foreground)]">Cross-Device Cloud Sync</p>
+                  <p className="text-sm font-extrabold text-[var(--foreground)]">Real-Time Multi-Device Sync</p>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Connected
-              </span>
+              {cloudSyncError && cloudSyncError.includes('permission') ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  Rules Action Needed
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  Live Real-Time
+                </span>
+              )}
             </div>
 
             <p className="text-xs text-[var(--muted)] leading-relaxed">
               {currentUser?.email
-                ? `Syncing workouts and custom routines for ${currentUser.email} with Cloud Firestore (gym-together-182f5).`
-                : 'Log in to automatically back up your workouts, PRs, and custom routines to Firebase Cloud.'}
+                ? `Active account: ${currentUser.email}. Live real-time workouts and active sessions synchronized with Cloud Firestore (gym-together-182f5).`
+                : 'Log in to automatically sync your live workouts, PRs, and custom routines across mobile and PC in real time.'}
             </p>
+
+            {/* Security Rules Alert if permissions are blocked */}
+            {(cloudSyncError && cloudSyncError.includes('permission')) && (
+              <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex flex-col gap-2.5 animate-in fade-in">
+                <div className="flex items-center gap-2 font-bold text-amber-300">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>Firebase Firestore Security Rules Update Required</span>
+                </div>
+                <p className="text-[11px] text-amber-200/90 leading-relaxed">
+                  Firebase rejected the cloud write because Firestore rules are in default locked mode. To allow mobile and PC to sync your account:
+                </p>
+                <ol className="list-decimal list-inside text-[11px] text-amber-100 flex flex-col gap-1 pl-1">
+                  <li>Open <strong>Firebase Console &rarr; Firestore Database &rarr; Rules</strong></li>
+                  <li>Replace the rules with the snippet below and click <strong>Publish</strong>:</li>
+                </ol>
+                <div className="p-2.5 rounded-lg bg-zinc-950 font-mono text-[10.5px] text-emerald-400 select-all border border-zinc-800 leading-relaxed overflow-x-auto">
+                  {`rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if request.auth != null;\n    }\n  }\n}`}
+                </div>
+              </div>
+            )}
+
+            {/* Test result message */}
+            {testResult && (
+              <div
+                className={`p-3 rounded-xl border text-xs flex items-center gap-2 animate-in fade-in ${
+                  testResult.success
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                    : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                }`}
+              >
+                {testResult.success ? (
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                )}
+                <span className="leading-snug">{testResult.message}</span>
+              </div>
+            )}
 
             <div className="p-3 rounded-xl bg-[var(--card-subtle)] border border-[var(--card-border)] flex items-center justify-between text-xs">
               <span className="text-[var(--muted)]">Last synced:</span>
@@ -449,19 +545,31 @@ export default function SettingsPage() {
               </span>
             </div>
 
-            <button
-              type="button"
-              disabled={isSyncingCloud || !currentUser?.id}
-              onClick={async () => {
-                triggerHaptic('medium');
-                await triggerCloudSync();
-                triggerHaptic('success');
-              }}
-              className="w-full h-11 bg-accent hover:opacity-95 active:scale-[0.99] disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2 text-xs transition-all shadow-md shadow-accent/20 cursor-pointer"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncingCloud ? 'animate-spin' : ''}`} />
-              <span>{isSyncingCloud ? 'Syncing to Cloud...' : 'Sync Cloud Backup Now'}</span>
-            </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                disabled={testResult?.loading || !currentUser?.id}
+                onClick={handleTestCloudConnection}
+                className="w-full h-11 bg-[var(--card-subtle)] hover:bg-[var(--card)] active:scale-[0.99] disabled:opacity-50 border border-[var(--card-border)] text-[var(--foreground)] font-bold rounded-xl flex items-center justify-center gap-2 text-xs transition-all cursor-pointer"
+              >
+                <Cloud className="w-3.5 h-3.5 text-accent" />
+                <span>{testResult?.loading ? 'Testing...' : 'Test Cloud Connection'}</span>
+              </button>
+
+              <button
+                type="button"
+                disabled={isSyncingCloud || !currentUser?.id}
+                onClick={async () => {
+                  triggerHaptic('medium');
+                  await triggerCloudSync();
+                  triggerHaptic('success');
+                }}
+                className="w-full h-11 bg-accent hover:opacity-95 active:scale-[0.99] disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2 text-xs transition-all shadow-md shadow-accent/20 cursor-pointer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isSyncingCloud ? 'animate-spin' : ''}`} />
+                <span>{isSyncingCloud ? 'Syncing...' : 'Sync Now'}</span>
+              </button>
+            </div>
           </section>
 
           {/* DATA BACKUP & RESTORE */}

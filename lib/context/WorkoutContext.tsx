@@ -17,8 +17,13 @@ import {
   deleteWorkoutFromCloud,
   uploadTemplateToCloud,
   deleteTemplateFromCloud,
+  uploadActiveWorkoutToCloud,
+  subscribeToUserWorkouts,
+  subscribeToActiveWorkout,
   performCloudSync,
   getLastCloudSyncTime,
+  getLastCloudSyncError,
+  setLastCloudSyncError,
 } from '../storage/cloudSync';
 
 interface WorkoutSummaryData {
@@ -42,6 +47,7 @@ interface WorkoutContextType {
   settings: UserSettings;
   isSyncingCloud: boolean;
   lastCloudSyncTime: string | null;
+  cloudSyncError: string | null;
 
   startWorkout: (template?: WorkoutTemplate, userId?: string) => Promise<Workout>;
   updateActiveWorkout: (updated: Workout) => Promise<void>;
@@ -81,6 +87,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   const activeUserId = currentUser?.id || activeProfile?.id;
   const [isSyncingCloud, setIsSyncingCloud] = useState<boolean>(false);
   const [lastCloudSyncTime, setLastCloudSyncTime] = useState<string | null>(getLastCloudSyncTime());
+  const [cloudSyncError, setCloudSyncError] = useState<string | null>(getLastCloudSyncError());
 
   const activeWorkoutRef = useRef<Workout | null>(null);
   activeWorkoutRef.current = activeWorkout;
@@ -121,38 +128,75 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
     try {
       const stats = await performCloudSync(uId);
       setLastCloudSyncTime(stats.lastSyncedAt);
+      if (stats.error) {
+        setCloudSyncError(stats.error);
+      } else {
+        setCloudSyncError(null);
+      }
       await refreshWorkouts(uId);
       await refreshTemplates(uId);
-    } catch (e) {
+    } catch (e: any) {
       console.warn('Cloud sync error:', e);
+      setCloudSyncError(e?.code || e?.message || String(e));
     } finally {
       setIsSyncingCloud(false);
     }
   }, [currentUser?.id, refreshWorkouts, refreshTemplates]);
 
-  // When active account changes (log in, switch profile, or log out), immediately isolate data
+  // LIVE REAL-TIME FIRESTORE SUBSCRIPTIONS
   useEffect(() => {
     const uId = currentUser?.id || activeProfile?.id;
-    if (uId) {
-      refreshWorkouts(uId);
-      refreshTemplates(uId);
+    if (!uId) return;
 
-      // Verify active workout belongs to this user
-      storage.getActiveWorkout(uId).then((savedActive) => {
-        if (savedActive && savedActive.status === 'active' && (!savedActive.userId || savedActive.userId === uId)) {
-          setActiveWorkout(savedActive);
-          setElapsedSeconds(calculateElapsed(savedActive.startTime));
-        } else {
-          setActiveWorkout(null);
-          setElapsedSeconds(0);
+    // Load local cached workouts immediately for 0ms cold-start
+    refreshWorkouts(uId);
+    refreshTemplates(uId);
+
+    // Initial check for local active workout
+    storage.getActiveWorkout(uId).then((savedActive) => {
+      if (savedActive && savedActive.status === 'active' && (!savedActive.userId || savedActive.userId === uId)) {
+        setActiveWorkout(savedActive);
+        setElapsedSeconds(calculateElapsed(savedActive.startTime));
+      } else {
+        setActiveWorkout(null);
+        setElapsedSeconds(0);
+        setRecoveryData(null);
+      }
+    });
+
+    let unsubWorkouts: (() => void) | null = null;
+    let unsubActive: (() => void) | null = null;
+
+    if (currentUser?.id) {
+      // 1. Live subscription to all completed workouts (instant real-time updates from mobile to PC!)
+      unsubWorkouts = subscribeToUserWorkouts(
+        currentUser.id,
+        (remoteWorkouts) => {
+          setAllWorkouts(remoteWorkouts);
+          setCloudSyncError(null);
+        },
+        (err) => {
+          setCloudSyncError(err?.code || err?.message || String(err));
+        }
+      );
+
+      // 2. Live subscription to active workout in progress
+      unsubActive = subscribeToActiveWorkout(currentUser.id, (remoteActive) => {
+        if (remoteActive && remoteActive.status === 'active') {
+          setActiveWorkout(remoteActive);
+          setElapsedSeconds(calculateElapsed(remoteActive.startTime));
           setRecoveryData(null);
         }
       });
 
-      if (currentUser?.id) {
-        triggerCloudSync();
-      }
+      // Two-way background sync on connect
+      triggerCloudSync();
     }
+
+    return () => {
+      if (unsubWorkouts) unsubWorkouts();
+      if (unsubActive) unsubActive();
+    };
   }, [currentUser?.id, activeProfile?.id, refreshWorkouts, refreshTemplates, calculateElapsed, triggerCloudSync]);
 
   // Apply theme & accent to DOM immediately and mirror to localStorage
@@ -326,6 +370,11 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       setElapsedSeconds(0);
       setRecoveryData(null);
 
+      // Real-time Cloud Active Workout Sync
+      if (uId) {
+        uploadActiveWorkoutToCloud(uId, newWorkout).catch(() => {});
+      }
+
       return newWorkout;
     },
     [currentUser?.id, activeProfile?.id]
@@ -335,7 +384,11 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   const updateActiveWorkout = useCallback(async (updated: Workout) => {
     setActiveWorkout(updated);
     await storage.saveActiveWorkout(updated);
-  }, []);
+    const uId = updated.userId || currentUser?.id || activeProfile?.id;
+    if (uId) {
+      uploadActiveWorkoutToCloud(uId, updated).catch(() => {});
+    }
+  }, [currentUser?.id, activeProfile?.id]);
 
   // Save completed workout
   const saveCompletedWorkout = useCallback(
@@ -369,11 +422,15 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
       await storage.saveWorkout(completedWorkout);
       await storage.clearActiveWorkout();
 
-      // Cloud backup
+      // Cloud backup (await so completion finishes cleanly)
       if (uId) {
-        uploadWorkoutToCloud(uId, completedWorkout).catch((e) =>
-          console.warn('Failed to upload workout to cloud:', e)
-        );
+        uploadActiveWorkoutToCloud(uId, null).catch(() => {});
+        const result = await uploadWorkoutToCloud(uId, completedWorkout);
+        if (!result.success && result.error) {
+          setCloudSyncError(result.error);
+        } else {
+          setCloudSyncError(null);
+        }
       }
 
       // If body weight provided, also record to bodyweight log
@@ -406,11 +463,15 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
   // Discard current active workout
   const discardActiveWorkout = useCallback(async () => {
     triggerHaptic('warning');
+    const uId = activeWorkoutRef.current?.userId || currentUser?.id || activeProfile?.id;
     await storage.clearActiveWorkout();
+    if (uId) {
+      uploadActiveWorkoutToCloud(uId, null).catch(() => {});
+    }
     setActiveWorkout(null);
     setElapsedSeconds(0);
     setRecoveryData(null);
-  }, []);
+  }, [currentUser?.id, activeProfile?.id]);
 
   // Recovery dialog actions
   const dismissRecovery = useCallback(
@@ -510,6 +571,7 @@ export function WorkoutProvider({ children }: { children: React.ReactNode }) {
         settings,
         isSyncingCloud,
         lastCloudSyncTime,
+        cloudSyncError,
         startWorkout,
         updateActiveWorkout,
         saveCompletedWorkout,
