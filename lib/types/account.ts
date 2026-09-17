@@ -38,14 +38,16 @@ export function getLevelTitle(totalWorkouts: number): string {
 
 export const DEFAULT_PROFILES: UserProfile[] = [
   {
-    id: 'user_main',
-    name: 'Lifter',
-    username: '@lifter',
-    avatar: '⚡',
+    id: 'guest_user',
+    name: 'Guest',
+    username: '@guest',
+    avatar: '👤',
     bio: '',
-    buddyCode: 'GYM-7701',
+    buddyCode: 'GYM-0000',
     levelTitle: 'Gym Novice',
     weeklyGoal: 4,
     createdAt: new Date().toISOString(),
+    isGuest: true,
   },
 ];
+
