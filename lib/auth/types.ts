@@ -2,7 +2,7 @@ import { UserProfile } from '../types/account';
 
 export interface AuthUser extends UserProfile {
   email: string;
-  authProvider: 'local' | 'firebase';
+  authProvider: 'local' | 'firebase' | 'supabase';
   isGuest?: boolean;
 }
 
@@ -42,11 +42,12 @@ export type AuthErrorCode =
   | 'WEAK_PASSWORD'
   | 'INVALID_EMAIL'
   | 'USER_NOT_FOUND'
-  | 'UNKNOWN_ERROR';
+  | 'UNKNOWN_ERROR'
+  | 'UNKNOWN';
 
 export interface AuthResult {
   success: boolean;
   user?: AuthUser;
-  errorCode?: AuthErrorCode;
+  errorCode?: AuthErrorCode | string;
   errorMessage?: string;
 }

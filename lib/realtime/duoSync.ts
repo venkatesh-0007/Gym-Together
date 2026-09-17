@@ -162,8 +162,9 @@ export function subscribeToDuoRoom(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'duo_rooms', filter: `id=eq.${roomCode}` },
       (payload) => {
-        if (payload.new && payload.new.room_data) {
-          const cloudRoom = payload.new.room_data as DuoRoom;
+        const newRow = payload.new as any;
+        if (newRow && newRow.room_data) {
+          const cloudRoom = newRow.room_data as DuoRoom;
           saveLocalStoredRoom(cloudRoom);
           onUpdate(cloudRoom);
         }

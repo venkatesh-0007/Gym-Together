@@ -9,7 +9,7 @@ export interface UserProfile {
   levelTitle: string; // e.g. "Gym Novice", "Iron Starter"
   weeklyGoal: number;
   createdAt: string;
-  authProvider?: 'local' | 'firebase';
+  authProvider?: 'local' | 'firebase' | 'supabase';
   isGuest?: boolean;
 }
 

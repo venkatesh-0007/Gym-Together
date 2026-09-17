@@ -189,7 +189,9 @@ class AuthService {
         level_title: authUser.levelTitle,
         weekly_goal: authUser.weeklyGoal,
         created_at: authUser.createdAt,
-      }).catch(err => console.warn('Failed to upsert missing profile on login:', err));
+      }).then(({ error }) => {
+        if (error) console.warn('Failed to upsert missing profile on login:', error);
+      });
     }
 
     const accounts = this.getStoredAccounts();
@@ -240,7 +242,9 @@ class AuthService {
         if (updates.weeklyGoal !== undefined) dbUpdates.weekly_goal = updates.weeklyGoal;
 
         if (Object.keys(dbUpdates).length > 0) {
-          supabase.from('profiles').update(dbUpdates).eq('id', userId).catch(err => console.warn('Supabase profile sync error:', err));
+          supabase.from('profiles').update(dbUpdates).eq('id', userId).then(({ error }) => {
+            if (error) console.warn('Supabase profile sync error:', error);
+          });
         }
         return updatedUser;
       }

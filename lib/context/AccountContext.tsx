@@ -113,7 +113,9 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
             level_title: authUser.levelTitle,
             weekly_goal: authUser.weeklyGoal,
             created_at: authUser.createdAt,
-          }).catch(err => console.warn('Failed to auto-repair profile:', err));
+          }).then(({ error }) => {
+            if (error) console.warn('Failed to auto-repair profile:', error);
+          });
         }
 
         setCurrentUser(authUser);
