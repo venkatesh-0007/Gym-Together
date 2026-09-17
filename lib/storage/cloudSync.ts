@@ -1,11 +1,6 @@
 import { Workout, WorkoutTemplate } from '../types/workout';
-import { getFirestoreDb } from '../firebase/config';
+import { supabase } from '../supabase/client';
 import { indexedDBStorage } from './indexeddb';
-
-// Sanitize object to remove undefined values for Firestore compatibility
-function sanitizeForFirestore<T>(data: T): T {
-  return JSON.parse(JSON.stringify(data));
-}
 
 export interface SyncStats {
   workoutsSynced: number;
@@ -37,49 +32,56 @@ export function setLastCloudSyncError(err: string | null) {
 }
 
 /**
- * Upload or update a completed workout in Cloud Firestore
+ * Upload or update a completed workout in Supabase
  */
 export async function uploadWorkoutToCloud(userId: string, workout: Workout): Promise<{ success: boolean; error?: string }> {
-  const db = getFirestoreDb();
-  if (!db || !userId) return { success: false, error: 'Database or user ID not available' };
+  if (!userId) return { success: false, error: 'User ID not available' };
 
   try {
-    const { doc, setDoc } = await import('firebase/firestore');
-    const cleanData = sanitizeForFirestore({
-      ...workout,
-      userId: userId,
-      cloudUpdatedAt: new Date().toISOString(),
-    });
-    await setDoc(doc(db, 'users', userId, 'workouts', workout.id), cleanData, { merge: true });
+    const dbWorkout = {
+      id: workout.id,
+      user_id: userId,
+      start_time: workout.startTime,
+      end_time: workout.endTime,
+      status: workout.status,
+      duration: workout.duration,
+      date: workout.date,
+      notes: workout.notes,
+      mood: workout.mood,
+      body_weight: workout.bodyWeight,
+      template_id: workout.templateId,
+      template_name: workout.templateName,
+      exercises: workout.exercises,
+      updated_at: new Date().toISOString()
+    };
+
+    const { error } = await supabase.from('workouts').upsert(dbWorkout);
+    if (error) throw error;
+
     setLastCloudSyncError(null);
     return { success: true };
   } catch (error: any) {
-    const errMsg = error?.code || error?.message || String(error);
-    console.warn('[CloudSync] Failed to upload workout:', errMsg);
-    setLastCloudSyncError(errMsg);
-    return { success: false, error: errMsg };
+    console.warn('[CloudSync] Failed to upload workout:', error);
+    setLastCloudSyncError(error.message);
+    return { success: false, error: error.message };
   }
 }
 
 /**
- * Sync active workout in-progress across devices in real time
+ * Sync active workout in-progress across devices in real time using Supabase
  */
 export async function uploadActiveWorkoutToCloud(userId: string, workout: Workout | null): Promise<void> {
-  const db = getFirestoreDb();
-  if (!db || !userId) return;
+  if (!userId) return;
 
   try {
-    const { doc, setDoc, deleteDoc } = await import('firebase/firestore');
-    const activeDocRef = doc(db, 'users', userId, 'activeWorkout', 'current');
     if (!workout) {
-      await deleteDoc(activeDocRef);
+      await supabase.from('active_workouts').delete().eq('user_id', userId);
     } else {
-      const cleanData = sanitizeForFirestore({
-        ...workout,
-        userId: userId,
-        cloudUpdatedAt: new Date().toISOString(),
+      await supabase.from('active_workouts').upsert({
+        user_id: userId,
+        workout: workout,
+        updated_at: new Date().toISOString()
       });
-      await setDoc(activeDocRef, cleanData, { merge: true });
     }
   } catch (error: any) {
     console.warn('[CloudSync] Failed to sync active workout:', error?.message);
@@ -87,204 +89,197 @@ export async function uploadActiveWorkoutToCloud(userId: string, workout: Workou
 }
 
 /**
- * Delete a workout document from Cloud Firestore
+ * Delete a workout from Supabase
  */
 export async function deleteWorkoutFromCloud(userId: string, workoutId: string): Promise<void> {
-  const db = getFirestoreDb();
-  if (!db || !userId) return;
+  if (!userId) return;
 
   try {
-    const { doc, deleteDoc } = await import('firebase/firestore');
-    await deleteDoc(doc(db, 'users', userId, 'workouts', workoutId));
+    await supabase.from('workouts').delete().match({ id: workoutId, user_id: userId });
   } catch (error) {
     console.warn('[CloudSync] Failed to delete workout from cloud:', error);
   }
 }
 
 /**
- * Upload or update a custom template in Cloud Firestore
+ * Upload or update a custom template in Supabase
  */
 export async function uploadTemplateToCloud(userId: string, template: WorkoutTemplate): Promise<void> {
-  const db = getFirestoreDb();
-  if (!db || !userId) return;
+  if (!userId) return;
 
   try {
-    const { doc, setDoc } = await import('firebase/firestore');
-    const cleanData = sanitizeForFirestore({
-      ...template,
-      userId: userId,
-      cloudUpdatedAt: new Date().toISOString(),
-    });
-    await setDoc(doc(db, 'users', userId, 'templates', template.id), cleanData, { merge: true });
+    const dbTemplate = {
+      id: template.id,
+      user_id: userId,
+      name: template.name,
+      description: template.description,
+      muscle_groups: template.muscleGroups,
+      exercises: template.exercises,
+      updated_at: new Date().toISOString()
+    };
+    await supabase.from('templates').upsert(dbTemplate);
   } catch (error) {
     console.warn('[CloudSync] Failed to upload template:', error);
   }
 }
 
 /**
- * Delete a custom template from Cloud Firestore
+ * Delete a custom template from Supabase
  */
 export async function deleteTemplateFromCloud(userId: string, templateId: string): Promise<void> {
-  const db = getFirestoreDb();
-  if (!db || !userId) return;
+  if (!userId) return;
 
   try {
-    const { doc, deleteDoc } = await import('firebase/firestore');
-    await deleteDoc(doc(db, 'users', userId, 'templates', templateId));
+    await supabase.from('templates').delete().match({ id: templateId, user_id: userId });
   } catch (error) {
     console.warn('[CloudSync] Failed to delete template from cloud:', error);
   }
 }
 
 /**
- * REAL-TIME WORKOUTS LISTENER
- * Subscribes to Firestore `users/{userId}/workouts` collection.
- * Triggers callback immediately on initial fetch and whenever mobile or PC finishes a workout!
+ * Map Supabase DB workout row back to App Workout format
+ */
+function mapDbWorkoutToApp(dbW: any): Workout {
+  return {
+    id: dbW.id,
+    userId: dbW.user_id,
+    startTime: dbW.start_time,
+    endTime: dbW.end_time,
+    status: dbW.status,
+    duration: dbW.duration,
+    date: dbW.date,
+    notes: dbW.notes,
+    mood: dbW.mood,
+    bodyWeight: dbW.body_weight,
+    templateId: dbW.template_id,
+    templateName: dbW.template_name,
+    exercises: dbW.exercises || []
+  };
+}
+
+/**
+ * REAL-TIME WORKOUTS LISTENER using Supabase Realtime
  */
 export function subscribeToUserWorkouts(
   userId: string,
   onWorkoutsUpdate: (workouts: Workout[]) => void,
   onError?: (err: any) => void
 ): () => void {
-  const db = getFirestoreDb();
-  if (!db || !userId) {
-    return () => {};
-  }
+  if (!userId) return () => {};
 
-  let unsub: (() => void) | null = null;
-
-  import('firebase/firestore')
-    .then(({ collection, onSnapshot, query, orderBy }) => {
-      try {
-        const workoutsColl = collection(db, 'users', userId, 'workouts');
-        unsub = onSnapshot(
-          workoutsColl,
-          async (snapshot) => {
-            setLastCloudSyncError(null);
-            const remoteWorkouts: Workout[] = [];
-            snapshot.forEach((docSnap) => {
-              const data = docSnap.data() as Workout;
-              if (data && data.id) {
-                remoteWorkouts.push({ ...data, userId });
-              }
-            });
-
-            // Sort newest first
-            remoteWorkouts.sort(
-              (a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
-            );
-
-            // Persist each incoming remote workout to local IndexedDB for offline cache
-            for (const workout of remoteWorkouts) {
-              await indexedDBStorage.saveWorkout(workout);
-            }
-
-            // Also check if any local workouts were deleted remotely
-            const localWorkouts = await indexedDBStorage.getWorkouts(userId);
-            const remoteIds = new Set(remoteWorkouts.map((w) => w.id));
-            // Keep local workouts if they match remote or if freshly created locally
-            const merged = remoteWorkouts;
-
-            if (typeof window !== 'undefined') {
-              localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
-            }
-
-            onWorkoutsUpdate(merged);
-          },
-          (err) => {
-            console.warn('[RealtimeSync] Firestore workout listener error:', err?.message || err);
-            setLastCloudSyncError(err?.code || err?.message || String(err));
-            if (onError) onError(err);
-          }
-        );
-      } catch (err) {
-        console.warn('[RealtimeSync] Listener setup exception:', err);
+  // First fetch the initial state
+  supabase.from('workouts')
+    .select('*')
+    .eq('user_id', userId)
+    .then(async ({ data, error }) => {
+      if (error) {
+        if (onError) onError(error);
+        return;
       }
-    })
-    .catch((err) => {
-      console.warn('[RealtimeSync] Failed to import firestore for subscription:', err);
+      if (data) {
+        const remoteWorkouts = data.map(mapDbWorkoutToApp);
+        
+        // Save remote to IndexedDB
+        for (const w of remoteWorkouts) {
+          await indexedDBStorage.saveWorkout(w);
+        }
+
+        // Properly merge with local workouts!
+        const localWorkouts = await indexedDBStorage.getWorkouts(userId);
+        const remoteMap = new Map(remoteWorkouts.map(w => [w.id, w]));
+        
+        // Combine, preferring remote if exists, otherwise keep local (for pending uploads)
+        const mergedMap = new Map<string, Workout>();
+        localWorkouts.forEach(w => mergedMap.set(w.id, w));
+        remoteWorkouts.forEach(w => mergedMap.set(w.id, w));
+
+        const merged = Array.from(mergedMap.values());
+        merged.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+        onWorkoutsUpdate(merged);
+      }
     });
 
+  // Subscribe to realtime changes
+  const channel = supabase.channel(`public:workouts:user_id=eq.${userId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'workouts', filter: `user_id=eq.${userId}` },
+      async (payload) => {
+        // Re-fetch all or just merge payload. For simplicity and robustness, we just re-run the local merge logic
+        // But since we just want to update the cache:
+        if (payload.eventType === 'DELETE') {
+           await indexedDBStorage.deleteWorkout(payload.old.id as string);
+        } else {
+           await indexedDBStorage.saveWorkout(mapDbWorkoutToApp(payload.new));
+        }
+
+        const localWorkouts = await indexedDBStorage.getWorkouts(userId);
+        localWorkouts.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
+        onWorkoutsUpdate(localWorkouts);
+      }
+    )
+    .subscribe();
+
   return () => {
-    if (unsub) {
-      unsub();
-    }
+    supabase.removeChannel(channel);
   };
 }
 
 /**
- * REAL-TIME ACTIVE WORKOUT LISTENER
- * Subscribes to Firestore `users/{userId}/activeWorkout/current`.
- * When workout is in progress on mobile, PC knows in real time!
+ * REAL-TIME ACTIVE WORKOUT LISTENER using Supabase Realtime
  */
 export function subscribeToActiveWorkout(
   userId: string,
   onActiveUpdate: (active: Workout | null) => void
 ): () => void {
-  const db = getFirestoreDb();
-  if (!db || !userId) return () => {};
+  if (!userId) return () => {};
 
-  let unsub: (() => void) | null = null;
+  // Initial fetch
+  supabase.from('active_workouts')
+    .select('workout')
+    .eq('user_id', userId)
+    .single()
+    .then(({ data }) => {
+       if (data && data.workout) {
+          onActiveUpdate(data.workout as Workout);
+       } else {
+          onActiveUpdate(null);
+       }
+    });
 
-  import('firebase/firestore')
-    .then(({ doc, onSnapshot }) => {
-      try {
-        const docRef = doc(db, 'users', userId, 'activeWorkout', 'current');
-        unsub = onSnapshot(
-          docRef,
-          (snap) => {
-            if (snap.exists()) {
-              const data = snap.data() as Workout;
-              onActiveUpdate(data);
-            } else {
-              onActiveUpdate(null);
-            }
-          },
-          (err) => {
-            console.warn('[RealtimeSync] Active workout listener error:', err?.message);
-          }
-        );
-      } catch (err) {
-        console.warn('[RealtimeSync] Active listener setup error:', err);
+  const channel = supabase.channel(`public:active_workouts:user_id=eq.${userId}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'active_workouts', filter: `user_id=eq.${userId}` },
+      (payload) => {
+        if (payload.eventType === 'DELETE') {
+          onActiveUpdate(null);
+        } else if (payload.new && payload.new.workout) {
+          onActiveUpdate(payload.new.workout as Workout);
+        }
       }
-    })
-    .catch(() => {});
+    )
+    .subscribe();
 
   return () => {
-    if (unsub) unsub();
+    supabase.removeChannel(channel);
   };
 }
 
 /**
- * Two-way synchronization between local IndexedDB and Cloud Firestore.
+ * Two-way synchronization between local IndexedDB and Supabase.
  */
 export async function performCloudSync(userId: string): Promise<SyncStats> {
   const nowIso = new Date().toISOString();
-  const db = getFirestoreDb();
-
-  if (!db || !userId) {
-    return {
-      workoutsSynced: 0,
-      templatesSynced: 0,
-      lastSyncedAt: nowIso,
-    };
+  if (!userId) {
+    return { workoutsSynced: 0, templatesSynced: 0, lastSyncedAt: nowIso };
   }
 
   try {
-    const { collection, getDocs } = await import('firebase/firestore');
-
     // 1. Sync Workouts
-    const workoutsCollRef = collection(db, 'users', userId, 'workouts');
-    const cloudWorkoutsSnap = await getDocs(workoutsCollRef);
-    const cloudWorkouts: Workout[] = [];
-
-    cloudWorkoutsSnap.forEach((docSnap) => {
-      const data = docSnap.data() as Workout;
-      if (data && data.id) {
-        cloudWorkouts.push(data);
-      }
-    });
-
+    const { data: cloudWorkoutsData } = await supabase.from('workouts').select('*').eq('user_id', userId);
+    const cloudWorkouts: Workout[] = (cloudWorkoutsData || []).map(mapDbWorkoutToApp);
+    
     const localWorkouts = await indexedDBStorage.getWorkouts(userId);
     const localWorkoutMap = new Map<string, Workout>(localWorkouts.map((w) => [w.id, w]));
     const cloudWorkoutMap = new Map<string, Workout>(cloudWorkouts.map((w) => [w.id, w]));
@@ -293,21 +288,14 @@ export async function performCloudSync(userId: string): Promise<SyncStats> {
 
     // Pull from cloud to local if missing locally
     for (const remoteWorkout of cloudWorkouts) {
-      const ensuredWorkout: Workout = {
-        ...remoteWorkout,
-        userId: userId,
-      };
       if (!localWorkoutMap.has(remoteWorkout.id)) {
-        await indexedDBStorage.saveWorkout(ensuredWorkout);
+        await indexedDBStorage.saveWorkout(remoteWorkout);
         workoutsSyncedCount++;
       }
     }
 
     // Push from local to cloud if missing in cloud
     for (const localWorkout of localWorkouts) {
-      if (localWorkout.userId !== userId) {
-        continue;
-      }
       if (!cloudWorkoutMap.has(localWorkout.id)) {
         await uploadWorkoutToCloud(userId, localWorkout);
         workoutsSyncedCount++;
@@ -315,16 +303,15 @@ export async function performCloudSync(userId: string): Promise<SyncStats> {
     }
 
     // 2. Sync Custom Templates
-    const templatesCollRef = collection(db, 'users', userId, 'templates');
-    const cloudTemplatesSnap = await getDocs(templatesCollRef);
-    const cloudTemplates: WorkoutTemplate[] = [];
-
-    cloudTemplatesSnap.forEach((docSnap) => {
-      const data = docSnap.data() as WorkoutTemplate;
-      if (data && data.id) {
-        cloudTemplates.push(data);
-      }
-    });
+    const { data: cloudTemplatesData } = await supabase.from('templates').select('*').eq('user_id', userId);
+    const cloudTemplates: WorkoutTemplate[] = (cloudTemplatesData || []).map(t => ({
+      id: t.id,
+      userId: t.user_id,
+      name: t.name,
+      description: t.description,
+      muscleGroups: t.muscle_groups,
+      exercises: t.exercises
+    }));
 
     const localTemplates = await indexedDBStorage.getTemplates(userId);
     const localTemplateMap = new Map<string, WorkoutTemplate>(localTemplates.map((t) => [t.id, t]));
@@ -333,20 +320,13 @@ export async function performCloudSync(userId: string): Promise<SyncStats> {
     let templatesSyncedCount = 0;
 
     for (const remoteTemplate of cloudTemplates) {
-      const ensuredTemplate: WorkoutTemplate = {
-        ...remoteTemplate,
-        userId: userId,
-      } as any;
       if (!localTemplateMap.has(remoteTemplate.id)) {
-        await indexedDBStorage.saveTemplate(ensuredTemplate);
+        await indexedDBStorage.saveTemplate(remoteTemplate);
         templatesSyncedCount++;
       }
     }
 
     for (const localTemplate of localTemplates) {
-      if ((localTemplate as any).userId !== userId) {
-        continue;
-      }
       if (!cloudTemplateMap.has(localTemplate.id)) {
         await uploadTemplateToCloud(userId, localTemplate);
         templatesSyncedCount++;
@@ -364,14 +344,13 @@ export async function performCloudSync(userId: string): Promise<SyncStats> {
       lastSyncedAt: nowIso,
     };
   } catch (error: any) {
-    const errMsg = error?.code || error?.message || String(error);
-    console.warn('[CloudSync] Sync failed or partially completed:', errMsg);
-    setLastCloudSyncError(errMsg);
+    console.warn('[CloudSync] Sync failed or partially completed:', error);
+    setLastCloudSyncError(error.message);
     return {
       workoutsSynced: 0,
       templatesSynced: 0,
       lastSyncedAt: nowIso,
-      error: errMsg,
+      error: error.message,
     };
   }
 }

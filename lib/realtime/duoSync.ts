@@ -1,7 +1,6 @@
 import { DuoRoom, DuoActivityItem, DuoHypeEvent, DuoParticipant } from '../types/duo';
 import { UserProfile } from '../types/account';
-import { getFirestoreDb } from '../firebase/config';
-import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { supabase } from '../supabase/client';
 
 const STORAGE_PREFIX = 'irontrack_duo_room_';
 const BROADCAST_CHANNEL_NAME = 'irontrack_duo_channel';
@@ -53,7 +52,6 @@ export async function createDuoRoom(
   host: UserProfile,
   workoutTitle: string = 'Push & Pull Duo'
 ): Promise<DuoRoom> {
-  // Generate friendly 6-digit room code e.g. "PUMP77"
   const digits = Math.floor(10 + Math.random() * 90);
   const prefixes = ['PUMP', 'IRON', 'BEAST', 'FLEX', 'LIFT', 'TITAN'];
   const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
@@ -78,14 +76,14 @@ export async function createDuoRoom(
 
   saveLocalStoredRoom(newRoom);
 
-  // If Firestore is available, save to cloud
-  const db = getFirestoreDb();
-  if (db) {
-    try {
-      await setDoc(doc(db, 'duo_rooms', roomCode), newRoom);
-    } catch (err) {
-      console.warn('Firestore room create error, using local mesh:', err);
-    }
+  try {
+    await supabase.from('duo_rooms').upsert({
+      id: roomCode,
+      room_data: newRoom,
+      updated_at: newRoom.updatedAt
+    });
+  } catch (err) {
+    console.warn('Supabase room create error, using local mesh:', err);
   }
 
   return newRoom;
@@ -100,39 +98,34 @@ export async function joinDuoRoom(
 ): Promise<DuoRoom | null> {
   const roomCode = code.trim().toUpperCase();
 
-  // Try cloud first if Firestore is connected
-  const db = getFirestoreDb();
-  if (db) {
-    try {
-      const snap = await getDoc(doc(db, 'duo_rooms', roomCode));
-      if (snap.exists()) {
-        const room = snap.data() as DuoRoom;
-        if (room.status !== 'finished') {
-          room.partner = {
-            userId: participant.id,
-            name: participant.name,
-            avatar: participant.avatar,
-            isReady: true,
-            status: 'idle',
-          };
-          room.status = 'active';
-          room.startTime = room.startTime || new Date().toISOString();
-          room.updatedAt = new Date().toISOString();
+  try {
+    const { data } = await supabase.from('duo_rooms').select('room_data').eq('id', roomCode).single();
+    if (data && data.room_data) {
+      const room = data.room_data as DuoRoom;
+      if (room.status !== 'finished') {
+        room.partner = {
+          userId: participant.id,
+          name: participant.name,
+          avatar: participant.avatar,
+          isReady: true,
+          status: 'idle',
+        };
+        room.status = 'active';
+        room.startTime = room.startTime || new Date().toISOString();
+        room.updatedAt = new Date().toISOString();
 
-          await updateDoc(doc(db, 'duo_rooms', roomCode), {
-            partner: room.partner,
-            status: 'active',
-            startTime: room.startTime,
-            updatedAt: room.updatedAt,
-          });
+        await supabase.from('duo_rooms').upsert({
+          id: roomCode,
+          room_data: room,
+          updated_at: room.updatedAt
+        });
 
-          saveLocalStoredRoom(room);
-          return room;
-        }
+        saveLocalStoredRoom(room);
+        return room;
       }
-    } catch (e) {
-      console.warn('Firestore join failed, falling back to local mesh:', e);
     }
+  } catch (e) {
+    console.warn('Supabase join failed, falling back to local mesh:', e);
   }
 
   // Fallback to local mesh / storage
@@ -155,30 +148,28 @@ export async function joinDuoRoom(
 }
 
 /**
- * Real-time room listener (supports Firestore onSnapshot AND BroadcastChannel for instant multi-tab sync)
+ * Real-time room listener
  */
 export function subscribeToDuoRoom(
   code: string,
   onUpdate: (room: DuoRoom) => void
 ): () => void {
   const roomCode = code.trim().toUpperCase();
-  let unsubFirestore: (() => void) | null = null;
-
+  
   // Cloud listener
-  const db = getFirestoreDb();
-  if (db) {
-    try {
-      unsubFirestore = onSnapshot(doc(db, 'duo_rooms', roomCode), (docSnap) => {
-        if (docSnap.exists()) {
-          const cloudRoom = docSnap.data() as DuoRoom;
+  const channel = supabase.channel(`public:duo_rooms:id=eq.${roomCode}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'duo_rooms', filter: `id=eq.${roomCode}` },
+      (payload) => {
+        if (payload.new && payload.new.room_data) {
+          const cloudRoom = payload.new.room_data as DuoRoom;
           saveLocalStoredRoom(cloudRoom);
           onUpdate(cloudRoom);
         }
-      });
-    } catch (err) {
-      console.warn('Firestore subscription error:', err);
-    }
-  }
+      }
+    )
+    .subscribe();
 
   // Multi-tab BroadcastChannel listener
   const bc = getBroadcastChannel();
@@ -221,7 +212,7 @@ export function subscribeToDuoRoom(
 
   // Cleanup
   return () => {
-    if (unsubFirestore) unsubFirestore();
+    supabase.removeChannel(channel);
     if (bc) {
       bc.removeEventListener('message', handleBroadcast);
       bc.close();
@@ -243,7 +234,6 @@ export async function logDuoSet(roomCode: string, item: DuoActivityItem) {
   room.activityLog = [item, ...(room.activityLog || [])];
   room.updatedAt = new Date().toISOString();
 
-  // If set belongs to current host, turn toggles to partner and vice versa
   if (room.partner) {
     room.currentTurnUserId =
       item.userId === room.host.userId ? room.partner.userId : room.host.userId;
@@ -251,17 +241,14 @@ export async function logDuoSet(roomCode: string, item: DuoActivityItem) {
 
   saveLocalStoredRoom(room);
 
-  const db = getFirestoreDb();
-  if (db) {
-    try {
-      await updateDoc(doc(db, 'duo_rooms', code), {
-        activityLog: room.activityLog,
-        currentTurnUserId: room.currentTurnUserId,
-        updatedAt: room.updatedAt,
-      });
-    } catch {
-      // Local broadcast will still handle it
-    }
+  try {
+    await supabase.from('duo_rooms').upsert({
+      id: code,
+      room_data: room,
+      updated_at: room.updatedAt
+    });
+  } catch {
+    // Local broadcast will still handle it
   }
 }
 
@@ -278,16 +265,14 @@ export async function sendDuoHype(roomCode: string, hype: DuoHypeEvent) {
 
   saveLocalStoredRoom(room);
 
-  const db = getFirestoreDb();
-  if (db) {
-    try {
-      await updateDoc(doc(db, 'duo_rooms', code), {
-        lastHype: hype,
-        updatedAt: room.updatedAt,
-      });
-    } catch {
-      // Local broadcast handles it
-    }
+  try {
+    await supabase.from('duo_rooms').upsert({
+      id: code,
+      room_data: room,
+      updated_at: room.updatedAt
+    });
+  } catch {
+    // Local broadcast handles it
   }
 }
 
@@ -304,15 +289,13 @@ export async function finishDuoRoom(roomCode: string) {
 
   saveLocalStoredRoom(room);
 
-  const db = getFirestoreDb();
-  if (db) {
-    try {
-      await updateDoc(doc(db, 'duo_rooms', code), {
-        status: 'finished',
-        updatedAt: room.updatedAt,
-      });
-    } catch {
-      // Local handles it
-    }
+  try {
+    await supabase.from('duo_rooms').upsert({
+      id: code,
+      room_data: room,
+      updated_at: room.updatedAt
+    });
+  } catch {
+    // Local handles it
   }
 }

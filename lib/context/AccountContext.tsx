@@ -5,6 +5,7 @@ import { UserProfile, DEFAULT_PROFILES, getLevelTitle } from '../types/account';
 import { AuthUser, LogInPayload, SignUpPayload, AuthResult } from '../auth/types';
 import { authService } from '../auth/authService';
 import { triggerHaptic } from '../utils/haptics';
+import { supabase } from '../supabase/client';
 
 interface AccountContextType {
   activeProfile: UserProfile;
@@ -31,7 +32,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   const [activeProfile, setActiveProfileState] = useState<UserProfile>(DEFAULT_PROFILES[0]);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
 
-  // Initialize auth session and local profiles
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -53,7 +53,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      // Also merge accounts from authService
+      // Merge accounts from authService
       const registeredAccounts = authService.getAllAccounts();
       registeredAccounts.forEach((acc) => {
         if (!loadedProfiles.some((p) => p.id === acc.id)) {
@@ -76,57 +76,44 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
       console.error('Error initializing accounts/auth:', e);
     }
 
-    // Subscribe to live Firebase Auth state changes across devices
-    let unsubAuth: (() => void) | null = null;
-    import('../firebase/config')
-      .then(({ getFirebaseAuth, getFirestoreDb }) => {
-        const auth = getFirebaseAuth();
-        if (auth) {
-          import('firebase/auth').then(({ onAuthStateChanged }) => {
-            unsubAuth = onAuthStateChanged(auth, async (fbUser) => {
-              if (fbUser && fbUser.email) {
-                const db = getFirestoreDb();
-                let remoteProfile: any = null;
-                if (db) {
-                  try {
-                    const { doc, getDoc } = await import('firebase/firestore');
-                    const snap = await getDoc(doc(db, 'users', fbUser.uid));
-                    if (snap.exists()) {
-                      remoteProfile = snap.data();
-                    }
-                  } catch (e) {
-                    console.warn('Could not fetch profile in onAuthStateChanged:', e);
-                  }
-                }
-
-                const authUser: AuthUser = {
-                  id: fbUser.uid,
-                  name: remoteProfile?.name || fbUser.displayName || 'Lifter',
-                  email: fbUser.email,
-                  username:
-                    remoteProfile?.username ||
-                    `@${(fbUser.displayName || 'lifter').toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
-                  avatar: remoteProfile?.avatar || '⚡',
-                  bio: remoteProfile?.bio || '',
-                  buddyCode: remoteProfile?.buddyCode || `GYM-${Math.floor(1000 + Math.random() * 9000)}`,
-                  levelTitle: remoteProfile?.levelTitle || 'Gym Novice',
-                  weeklyGoal: remoteProfile?.weeklyGoal || 4,
-                  createdAt: remoteProfile?.createdAt || new Date().toISOString(),
-                  authProvider: 'firebase',
-                };
-
-                setCurrentUser(authUser);
-                setActiveProfileState(authUser);
-                authService.setSession(authUser);
-              }
-            });
-          });
+    // Subscribe to live Supabase Auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        let dbProfile: any = null;
+        try {
+          const { data } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+          if (data) dbProfile = data;
+        } catch (e) {
+          console.warn('Could not fetch profile in onAuthStateChange:', e);
         }
-      })
-      .catch(() => {});
+
+        const authUser: AuthUser = {
+          id: session.user.id,
+          name: dbProfile?.name || session.user.user_metadata?.name || 'Lifter',
+          email: session.user.email!,
+          username: dbProfile?.username || `@${(session.user.user_metadata?.name || 'lifter').toLowerCase().replace(/[^a-z0-9]/g, '_')}`,
+          avatar: dbProfile?.avatar || '⚡',
+          bio: dbProfile?.bio || '',
+          buddyCode: dbProfile?.buddy_code || `GYM-${Math.floor(1000 + Math.random() * 9000)}`,
+          levelTitle: dbProfile?.level_title || 'Gym Novice',
+          weeklyGoal: dbProfile?.weekly_goal || 4,
+          createdAt: dbProfile?.created_at || new Date().toISOString(),
+          authProvider: 'supabase',
+        };
+
+        setCurrentUser(authUser);
+        setActiveProfileState(authUser);
+        authService.setSession(authUser);
+      } else {
+        if (event === 'SIGNED_OUT') {
+           setCurrentUser(null);
+           authService.setSession(null);
+        }
+      }
+    });
 
     return () => {
-      if (unsubAuth) unsubAuth();
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -183,7 +170,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     await authService.logOut();
     setCurrentUser(null);
 
-    // Fallback to guest profile or first profile
     const guestProfile: UserProfile = {
       ...DEFAULT_PROFILES[0],
       id: `guest_${Date.now()}`,
@@ -203,7 +189,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
         setActiveProfileState(found);
         persistProfiles(allProfiles, found.id);
 
-        // If switching to an account in authService, update session
         const authAccounts = authService.getAllAccounts();
         const matchedAuth = authAccounts.find((a) => a.id === found.id);
         if (matchedAuth) {
@@ -269,7 +254,7 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
   const deleteProfile = useCallback(
     (profileId: string) => {
-      if (allProfiles.length <= 1) return; // Prevent deleting the last profile
+      if (allProfiles.length <= 1) return;
       const filtered = allProfiles.filter((p) => p.id !== profileId);
       setAllProfiles(filtered);
       const nextActive = filtered[0];

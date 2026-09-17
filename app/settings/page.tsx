@@ -122,7 +122,7 @@ export default function SettingsPage() {
     setTimeout(() => setImportMessage(null), 4000);
   };
 
-  // Test live Cloud Firestore read/write connection
+  // Test live Supabase read/write connection
   const handleTestCloudConnection = async () => {
     if (!currentUser?.id) {
       setTestResult({ loading: false, success: false, message: 'Please log in to test Cloud Sync.' });
@@ -130,41 +130,27 @@ export default function SettingsPage() {
     }
     setTestResult({ loading: true });
     try {
-      const { getFirestoreDb } = await import('@/lib/firebase/config');
-      const db = getFirestoreDb();
-      if (!db) {
-        setTestResult({ loading: false, success: false, message: 'Firebase configuration not found.' });
-        return;
+      const { supabase } = await import('@/lib/supabase/client');
+      // Test read from profiles table
+      const { data, error } = await supabase.from('profiles').select('id').eq('id', currentUser.id).limit(1);
+      
+      if (error) {
+        throw error;
       }
-      const { doc, setDoc, getDoc } = await import('firebase/firestore');
-      const testDocRef = doc(db, 'users', currentUser.id, 'workouts', '_sync_test_ping');
-      await setDoc(
-        testDocRef,
-        {
-          test: true,
-          testedAt: new Date().toISOString(),
-          device: typeof navigator !== 'undefined' ? navigator.userAgent : 'web',
-        },
-        { merge: true }
-      );
-      const snap = await getDoc(testDocRef);
-      if (snap.exists()) {
-        setTestResult({
-          loading: false,
-          success: true,
-          message: 'Real-time Cloud Database is online & verified! Workouts sync live across your phone and PC.',
-        });
-        triggerHaptic('success');
-      } else {
-        setTestResult({ loading: false, success: false, message: 'Write succeeded but read failed.' });
-      }
+
+      setTestResult({
+        loading: false,
+        success: true,
+        message: 'Real-time Supabase Database is online & verified! Workouts sync live across your phone and PC.',
+      });
+      triggerHaptic('success');
     } catch (err: any) {
       const msg = err?.code || err?.message || String(err);
       setTestResult({
         loading: false,
         success: false,
         message: msg.includes('permission')
-          ? 'Permission Denied: Your Firebase Firestore Security Rules are blocking writes. Update rules in Firebase Console.'
+          ? 'Permission Denied: Your Supabase RLS Policies are blocking reads. Update policies in Supabase Console.'
           : `Error connecting: ${msg}`,
       });
       triggerHaptic('warning');

@@ -27,10 +27,6 @@ import { useWorkout } from '@/lib/context/WorkoutContext';
 import { PRESET_AVATARS } from '@/lib/types/account';
 import { calculateStreak } from '@/lib/calculations/streak';
 import { formatDurationHuman } from '@/lib/calculations/duration';
-import {
-  getStoredFirebaseConfig,
-  saveStoredFirebaseConfig,
-} from '@/lib/firebase/config';
 import { triggerHaptic } from '@/lib/utils/haptics';
 
 export default function ProfilePage() {
@@ -66,12 +62,6 @@ export default function ProfilePage() {
   const [newUsername, setNewUsername] = useState('');
   const [newAvatar, setNewAvatar] = useState('⚡');
   const [newBio, setNewBio] = useState('');
-
-  // Firebase config state
-  const existingFb = getStoredFirebaseConfig();
-  const [fbApiKey, setFbApiKey] = useState(existingFb?.apiKey || '');
-  const [fbProjectId, setFbProjectId] = useState(existingFb?.projectId || '');
-  const [fbAppId, setFbAppId] = useState(existingFb?.appId || '');
 
   // Stats calculation strictly from authentic user workouts
   const userWorkouts = allWorkouts.filter(
@@ -133,20 +123,6 @@ export default function ProfilePage() {
     setNewBio('');
     setIsCreateOpen(false);
     setIsSwitchOpen(false);
-  };
-
-  const handleSaveFirebase = () => {
-    if (fbApiKey.trim() && fbProjectId.trim()) {
-      saveStoredFirebaseConfig({
-        apiKey: fbApiKey.trim(),
-        projectId: fbProjectId.trim(),
-        appId: fbAppId.trim() || '1:12345:web:irontrack',
-      });
-    } else {
-      saveStoredFirebaseConfig(null);
-    }
-    setIsFirebaseOpen(false);
-    triggerHaptic('success');
   };
 
   return (
@@ -458,31 +434,14 @@ export default function ProfilePage() {
                 </span>
               </div>
 
-              <span
-                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  existingFb
-                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                    : 'bg-zinc-800 text-zinc-400'
-                }`}
-              >
-                {existingFb ? 'Firebase Connected' : 'Local Mesh (Zero-Config)'}
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                Supabase Connected
               </span>
             </div>
 
             <p className="text-xs text-zinc-400 leading-relaxed">
-              {existingFb
-                ? 'Connected to Firebase Firestore for cloud real-time duo rooms and live rankings.'
-                : 'Zero-config real-time mesh is active. Duo collab and live rankings sync across multiple browser tabs and windows automatically!'}
+              Connected to Supabase PostgreSQL for cloud real-time duo rooms, automatic data syncing, and cross-device live sessions.
             </p>
-
-            <button
-              type="button"
-              onClick={() => setIsFirebaseOpen(true)}
-              className="w-full h-12 bg-zinc-800 hover:bg-zinc-700 active:scale-[0.99] border border-zinc-700 text-zinc-200 text-xs font-bold rounded-2xl flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5"
-            >
-              <Database className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{existingFb ? 'Configure Firebase Keys' : 'Connect Firebase Cloud Database'}</span>
-            </button>
           </section>
         </div>
       </div>
@@ -648,69 +607,6 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* FIREBASE CONFIG MODAL */}
-      {isFirebaseOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-sm bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
-            <h3 className="text-base font-bold text-white text-center">
-              Firebase Cloud Setup
-            </h3>
-            <p className="text-xs text-zinc-400">
-              Enter your Firebase project keys to enable multi-device cloud sync across the internet.
-            </p>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-zinc-400">API Key</label>
-              <input
-                type="text"
-                placeholder="AIzaSy..."
-                value={fbApiKey}
-                onChange={(e) => setFbApiKey(e.target.value)}
-                className="bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-zinc-400">Project ID</label>
-              <input
-                type="text"
-                placeholder="gym-tracker-12345"
-                value={fbProjectId}
-                onChange={(e) => setFbProjectId(e.target.value)}
-                className="bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-zinc-400">App ID</label>
-              <input
-                type="text"
-                placeholder="1:123456789:web:abcdef"
-                value={fbAppId}
-                onChange={(e) => setFbAppId(e.target.value)}
-                className="bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white font-mono"
-              />
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsFirebaseOpen(false)}
-                className="flex-1 py-2.5 bg-zinc-800 text-zinc-300 text-xs font-semibold rounded-xl"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveFirebase}
-                className="flex-1 py-2.5 bg-emerald-500 text-emerald-950 text-xs font-bold rounded-xl"
-              >
-                Save Keys
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* SIGN OUT CONFIRMATION MODAL */}
       {showLogoutConfirm && (
